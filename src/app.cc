@@ -5,6 +5,7 @@
 
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/instance.cc"
+#include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
 #include "window/window.cc"
 #include <iostream>
@@ -15,10 +16,12 @@ public:
   static void run() {
     auto instance = Instance::init();
     DebugMessenger::init(instance);
-    PhysicalDevice::init(instance);
+    auto physicalDevice = PhysicalDevice(instance);
+    LogicalDevice::init(physicalDevice);
 
     Window::init(1024, 768);
 
+    LogicalDevice::kill();
     if (enablesValidationLayer)
       DebugMessenger::kill(instance);
     Window::kill();
