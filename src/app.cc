@@ -13,16 +13,15 @@
 class App {
 public:
   static void run() {
-    Instance::init();
-    DebugMessenger::run(Instance::instance);
-    auto physicalDevice = PhysicalDevice(Instance::instance);
+    auto instance = Instance::init();
+    DebugMessenger::init(instance);
+    PhysicalDevice::init(instance);
 
-    auto window = Window(1024, 768);
-    window.start();
+    Window::init(1024, 768);
 
-    // if (enablesValidationLayer)
-    //   DebugMessenger::kill(Instance::instance);
-    window.kill();
+    if (enablesValidationLayer)
+      DebugMessenger::kill(instance);
+    Window::kill();
     Instance::kill();
   }
 };

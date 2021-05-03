@@ -9,9 +9,9 @@
 class Instance {
 
 public:
-  inline static VkInstance instance = {};
+  inline static VkInstance instance = VK_NULL_HANDLE;
 
-  static void init() {
+  static VkInstance init() {
     auto createInfo = Instance::createCreateInfo();
 
     auto appInfo = Instance::createAppInfo();
@@ -26,6 +26,8 @@ public:
 
     if (vkCreateInstance(&createInfo, NULL, &Instance::instance) != VK_SUCCESS)
       throw std::runtime_error("failed to create instance!");
+
+    return Instance::instance;
   }
 
   static void kill() { vkDestroyInstance(Instance::instance, nullptr); }

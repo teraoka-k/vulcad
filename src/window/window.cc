@@ -5,25 +5,29 @@
 
 class Window {
 private:
-  GLFWwindow *window;
+  inline static GLFWwindow *window = NULL;
 
 public:
-  Window(uint32_t width = 800, uint32_t height = 400) {
+  static void init(uint32_t width = 800, uint32_t height = 400) {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    this->window = glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
+    Window::window =
+        glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
+
+    Window::render();
   }
 
-  void kill() {
-    glfwDestroyWindow(this->window);
+  static void kill() {
+    glfwDestroyWindow(Window::window);
     glfwTerminate();
   }
 
-  void start() {
-    while (!glfwWindowShouldClose(this->window)) {
+private:
+  static void render() {
+    while (!glfwWindowShouldClose(Window::window)) {
       glfwPollEvents();
     }
   }

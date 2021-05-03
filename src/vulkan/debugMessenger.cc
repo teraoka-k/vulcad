@@ -19,7 +19,7 @@ public:
                                       nullptr);
   }
 
-  static void run(VkInstance instance) {
+  static void init(VkInstance instance) {
     auto createInfo = VkDebugUtilsMessengerCreateInfoEXT{
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |

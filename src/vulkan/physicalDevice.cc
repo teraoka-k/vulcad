@@ -1,15 +1,16 @@
 #if !defined(TUTORIAL_VULKAN_PHYSICAL_DEVICE)
 #define TUTORIAL_VULKAN_PHYSICAL_DEVICE
 
+#include "queueFamily.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 class PhysicalDevice {
 public:
-  PhysicalDevice(VkInstance instance) {
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+  inline static VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
+  static void init(VkInstance instance) {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
     if (deviceCount == 0)
@@ -20,18 +21,40 @@ public:
 
     for (const auto &device : devices) {
       if (isDeviceSuitable(device)) {
-        physicalDevice = device;
+        PhysicalDevice::physicalDevice = device;
         break;
       }
     }
 
-    if (physicalDevice == VK_NULL_HANDLE) {
+    if (PhysicalDevice::physicalDevice == VK_NULL_HANDLE)
       throw std::runtime_error("failed to find a suitable GPU!");
-    }
   }
 
 private:
-  bool isDeviceSuitable(VkPhysicalDevice device) { return true; }
+  static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+    QueueFamilyIndices indices;
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             queueFamilies.data());
+
+    for (int i = 0; i < queueFamilies.size(); i++) {
+      if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        indices.graphicsFamily = i;
+        break;
+      }
+    }
+
+    return indices;
+  }
+
+  static bool isDeviceSuitable(VkPhysicalDevice device) {
+    auto indices = PhysicalDevice::findQueueFamilies(device);
+    return indices.graphicsFamily.has_value();
+  }
 };
 
 #endif // TUTORIAL_VULKAN_PHYSICAL_DEVICE
