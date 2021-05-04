@@ -12,7 +12,7 @@ public:
   VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
   QueueFamilyIndices queueFamilyIndices;
 
-  PhysicalDevice(VkInstance instance) {
+  PhysicalDevice(VkInstance instance, VkSurfaceKHR surface) {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
     if (deviceCount == 0)
@@ -22,7 +22,7 @@ public:
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
     for (const auto &device : devices) {
-      if (this->isDeviceSuitable(device)) {
+      if (this->isDeviceSuitable(device, surface)) {
         this->vkPhysicalDevice = device;
         break;
       }
@@ -32,7 +32,7 @@ public:
   }
 
 private:
-  void findQueueFamilies(VkPhysicalDevice device) {
+  void findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
                                              nullptr);
@@ -41,16 +41,24 @@ private:
                                              queueFamilies.data());
 
     for (int i = 0; i < queueFamilies.size(); i++) {
-      if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-        this->queueFamilyIndices.graphicsFamily = i;
+      if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        this->queueFamilyIndices.graphicsFamilyIndex = i;
+
+      VkBool32 supportsSurface = false;
+      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
+                                           &supportsSurface);
+      if (supportsSurface)
+        this->queueFamilyIndices.surfaceFamilyIndex = i;
+
+      if (this->queueFamilyIndices.graphicsFamilyIndex.has_value() &&
+          this->queueFamilyIndices.surfaceFamilyIndex.has_value())
         break;
-      }
     }
   }
 
-  bool isDeviceSuitable(VkPhysicalDevice device) {
-    this->findQueueFamilies(device);
-    return this->queueFamilyIndices.graphicsFamily.has_value();
+  bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    this->findQueueFamilies(device, surface);
+    return this->queueFamilyIndices.graphicsFamilyIndex.has_value();
   }
 };
 

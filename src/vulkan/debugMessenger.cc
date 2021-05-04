@@ -7,19 +7,10 @@
 
 class DebugMessenger {
 
-  inline static VkDebugUtilsMessengerEXT messenger = {};
+  VkDebugUtilsMessengerEXT messenger = {};
 
 public:
-  static void kill(VkInstance instance) {
-    auto vkDestroyDebugUtilsMessengerEXT =
-        (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (vkDestroyDebugUtilsMessengerEXT != nullptr)
-      vkDestroyDebugUtilsMessengerEXT(instance, DebugMessenger::messenger,
-                                      nullptr);
-  }
-
-  static void init(VkInstance instance) {
+  DebugMessenger(VkInstance instance) {
     auto createInfo = VkDebugUtilsMessengerCreateInfoEXT{
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
@@ -36,9 +27,16 @@ public:
             instance, "vkCreateDebugUtilsMessengerEXT");
     if (vkCreateDebugUtilsMessengerEXT == nullptr ||
         vkCreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr,
-                                       &DebugMessenger::messenger) !=
-            VK_SUCCESS)
+                                       &this->messenger) != VK_SUCCESS)
       throw std::runtime_error("failed to set up debug messenger");
+  }
+
+  void kill(VkInstance instance) {
+    auto vkDestroyDebugUtilsMessengerEXT =
+        (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+            instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (vkDestroyDebugUtilsMessengerEXT != nullptr)
+      vkDestroyDebugUtilsMessengerEXT(instance, this->messenger, nullptr);
   }
 
 private:

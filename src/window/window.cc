@@ -4,30 +4,27 @@
 #include <GLFW/glfw3.h>
 
 class Window {
-private:
-  inline static GLFWwindow *window = NULL;
 
 public:
-  static void init(uint32_t width = 800, uint32_t height = 400) {
+  GLFWwindow *glfwWindow = NULL;
+
+  Window(uint32_t width = 800, uint32_t height = 400) {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    Window::window =
+    this->glfwWindow =
         glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
-
-    Window::render();
   }
 
-  static void kill() {
-    glfwDestroyWindow(Window::window);
+  void kill() {
+    glfwDestroyWindow(this->glfwWindow);
     glfwTerminate();
   }
 
-private:
-  static void render() {
-    while (!glfwWindowShouldClose(Window::window)) {
+  void render() {
+    while (!glfwWindowShouldClose(this->glfwWindow)) {
       glfwPollEvents();
     }
   }

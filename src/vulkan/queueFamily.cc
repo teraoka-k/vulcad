@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 struct QueueFamilyIndices {
-  std::optional<uint32_t> graphicsFamily;
+  std::optional<uint32_t> graphicsFamilyIndex;
+  std::optional<uint32_t> surfaceFamilyIndex;
 };
 
 #endif // TUTORIAL_VULKAN_QUEUE_FAMILY

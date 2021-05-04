@@ -2,42 +2,53 @@
 #define TUTORIAL_VULKAN_LOGICAL_DEVICE
 
 #include "physicalDevice.cc"
+#include <set>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 class LogicalDevice {
-  inline static VkDevice device = VK_NULL_HANDLE;
 
 public:
-  static VkDevice init(PhysicalDevice physicalDevice) {
-    auto queueCreateInfo =
+  VkDevice vkDevice;
+
+  LogicalDevice(PhysicalDevice physicalDevice) {
+    auto queueCreateInfos =
         LogicalDevice::getQueueCreateInfo(physicalDevice.queueFamilyIndices);
     VkPhysicalDeviceFeatures deviceFeatures{};
     auto createInfo = VkDeviceCreateInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .queueCreateInfoCount = 1,
-        .pQueueCreateInfos = &queueCreateInfo,
+        .queueCreateInfoCount = (uint32_t)queueCreateInfos.size(),
+        .pQueueCreateInfos = queueCreateInfos.data(),
         .pEnabledFeatures = &deviceFeatures,
     };
 
     if (vkCreateDevice(physicalDevice.vkPhysicalDevice, &createInfo, nullptr,
-                       &LogicalDevice::device) != VK_SUCCESS) {
+                       &this->vkDevice) != VK_SUCCESS) {
       throw std::runtime_error("failed to create logical device");
     }
-    return LogicalDevice::device;
   }
 
-  static void kill() { vkDestroyDevice(LogicalDevice::device, nullptr); }
+  void kill() { vkDestroyDevice(this->vkDevice, nullptr); }
 
 private:
-  static VkDeviceQueueCreateInfo
+  static std::vector<VkDeviceQueueCreateInfo>
   getQueueCreateInfo(QueueFamilyIndices queueFamilyIndices) {
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = {
+        queueFamilyIndices.graphicsFamilyIndex.value(),
+        queueFamilyIndices.surfaceFamilyIndex.value()};
+
     float queuePriority = 1.0f;
-    return {
-        .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-        .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value(),
-        .queueCount = 1,
-        .pQueuePriorities = &queuePriority,
-    };
+    for (auto queueFamily : uniqueQueueFamilies) {
+      queueCreateInfos.push_back({
+          .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+          .queueFamilyIndex = queueFamily,
+          .queueCount = 1,
+          .pQueuePriorities = &queuePriority,
+      });
+    }
+
+    return queueCreateInfos;
   }
 };
 

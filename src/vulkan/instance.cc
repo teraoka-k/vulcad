@@ -9,9 +9,9 @@
 class Instance {
 
 public:
-  inline static VkInstance instance = VK_NULL_HANDLE;
+  VkInstance vkInstance;
 
-  static VkInstance init() {
+  Instance() {
     auto createInfo = Instance::createCreateInfo();
 
     auto appInfo = Instance::createAppInfo();
@@ -24,13 +24,11 @@ public:
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
 
-    if (vkCreateInstance(&createInfo, NULL, &Instance::instance) != VK_SUCCESS)
+    if (vkCreateInstance(&createInfo, NULL, &this->vkInstance) != VK_SUCCESS)
       throw std::runtime_error("failed to create instance!");
-
-    return Instance::instance;
   }
 
-  static void kill() { vkDestroyInstance(Instance::instance, nullptr); }
+  void kill() { vkDestroyInstance(this->vkInstance, nullptr); }
 
 private:
   static VkApplicationInfo createAppInfo() {

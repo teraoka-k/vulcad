@@ -4,28 +4,37 @@
 #include <vulkan/vulkan.h>
 
 #include "vulkan/debugMessenger.cc"
+#include "vulkan/deviceQueue.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
+#include "vulkan/windowSurface.cc"
 #include "window/window.cc"
 #include <iostream>
 #include <vector>
 
 class App {
+
 public:
   static void run() {
-    auto instance = Instance::init();
-    DebugMessenger::init(instance);
-    auto physicalDevice = PhysicalDevice(instance);
-    LogicalDevice::init(physicalDevice);
+    auto window = Window(1024, 768);
+    auto instance = Instance();
+    auto vkInstance = instance.vkInstance;
+    auto windowSurface = WindowSurface(vkInstance, window.glfwWindow);
+    auto debugMessenger = DebugMessenger(vkInstance);
+    auto physicalDevice = PhysicalDevice(vkInstance, windowSurface.vkSurface);
+    auto logicalDevice = LogicalDevice(physicalDevice);
+    auto [graphicsQueue, surfaceQueue] = DeviceQueue::get(
+        logicalDevice.vkDevice, physicalDevice.queueFamilyIndices);
 
-    Window::init(1024, 768);
+    window.render();
 
-    LogicalDevice::kill();
+    logicalDevice.kill();
     if (enablesValidationLayer)
-      DebugMessenger::kill(instance);
-    Window::kill();
-    Instance::kill();
+      debugMessenger.kill(vkInstance);
+    window.kill();
+    windowSurface.kill(vkInstance);
+    instance.kill();
   }
 };
 
