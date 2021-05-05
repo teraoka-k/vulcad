@@ -34,6 +34,16 @@ public:
       throw std::runtime_error("failed to create swap chain");
   }
 
+  std::vector<VkImage> getImages(VkDevice device) {
+    std::vector<VkImage> images;
+    vkGetSwapchainImagesKHR(device, this->vkSwapChain, &this->imageCount,
+                            nullptr);
+    images.resize(imageCount);
+    vkGetSwapchainImagesKHR(device, this->vkSwapChain, &this->imageCount,
+                            images.data());
+    return images;
+  }
+
   static bool isSurpportedBy(VkPhysicalDevice device, VkSurfaceKHR surface) {
     auto supportDetails = SwapChain::getSupportDetails(device, surface);
     return !supportDetails.surfaceFormats.empty() &&
@@ -87,16 +97,6 @@ private:
         .clipped = VK_TRUE,
         .oldSwapchain = VK_NULL_HANDLE,
     };
-  }
-
-  std::vector<VkImage> getImages(VkDevice device) {
-    std::vector<VkImage> images;
-    vkGetSwapchainImagesKHR(device, this->vkSwapChain, &this->imageCount,
-                            nullptr);
-    images.resize(imageCount);
-    vkGetSwapchainImagesKHR(device, this->vkSwapChain, &this->imageCount,
-                            images.data());
-    return images;
   }
 
   static SwapChainSupportDetails getSupportDetails(VkPhysicalDevice device,

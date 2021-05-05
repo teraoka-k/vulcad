@@ -5,6 +5,7 @@
 
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/deviceQueue.cc"
+#include "vulkan/imageView.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
@@ -30,9 +31,11 @@ public:
     auto swapChain = SwapChain(
         physicalDevice.vkPhysicalDevice, physicalDevice.queueFamilyIndices,
         logicalDevice.vkDevice, windowSurface.vkSurface, window.glfwWindow);
+    auto imageView = ImageView(logicalDevice.vkDevice, swapChain);
 
     window.render();
 
+    imageView.kill(logicalDevice.vkDevice);
     swapChain.kill(logicalDevice.vkDevice);
     logicalDevice.kill();
     if (enablesValidationLayer)
