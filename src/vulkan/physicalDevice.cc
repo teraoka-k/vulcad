@@ -2,6 +2,8 @@
 #define TUTORIAL_VULKAN_PHYSICAL_DEVICE
 
 #include "queueFamily.cc"
+#include "swapChain.cc"
+#include <set>
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -50,15 +52,33 @@ private:
       if (supportsSurface)
         this->queueFamilyIndices.surfaceFamilyIndex = i;
 
-      if (this->queueFamilyIndices.graphicsFamilyIndex.has_value() &&
-          this->queueFamilyIndices.surfaceFamilyIndex.has_value())
+      if (this->queueFamilyIndices.isComplete())
         break;
     }
   }
 
   bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     this->findQueueFamilies(device, surface);
-    return this->queueFamilyIndices.graphicsFamilyIndex.has_value();
+    return this->queueFamilyIndices.isComplete() &&
+           PhysicalDevice::supportsExtensions(device,
+                                              SwapChain::EXTENSION_NAMES) &&
+           SwapChain::isSurpportedBy(device, surface);
+  }
+
+  static bool supportsExtensions(VkPhysicalDevice device,
+                                 std::vector<const char *> extensionNames) {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         availableExtensions.data());
+    std::set<std::string> requiredExtensions(extensionNames.begin(),
+                                             extensionNames.end());
+    for (const auto &extension : availableExtensions) {
+      requiredExtensions.erase(extension.extensionName);
+    }
+    return requiredExtensions.empty();
   }
 };
 

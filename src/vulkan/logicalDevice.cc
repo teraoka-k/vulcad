@@ -2,6 +2,7 @@
 #define TUTORIAL_VULKAN_LOGICAL_DEVICE
 
 #include "physicalDevice.cc"
+#include "swapChain.cc"
 #include <set>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -19,6 +20,8 @@ public:
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .queueCreateInfoCount = (uint32_t)queueCreateInfos.size(),
         .pQueueCreateInfos = queueCreateInfos.data(),
+        .enabledExtensionCount = (uint32_t)SwapChain::EXTENSION_NAMES.size(),
+        .ppEnabledExtensionNames = SwapChain::EXTENSION_NAMES.data(),
         .pEnabledFeatures = &deviceFeatures,
     };
 

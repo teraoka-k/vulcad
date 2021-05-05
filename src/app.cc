@@ -8,6 +8,7 @@
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
+#include "vulkan/swapChain.cc"
 #include "vulkan/windowSurface.cc"
 #include "window/window.cc"
 #include <iostream>
@@ -17,7 +18,7 @@ class App {
 
 public:
   static void run() {
-    auto window = Window(1024, 768);
+    auto window = Window(800, 600);
     auto instance = Instance();
     auto vkInstance = instance.vkInstance;
     auto windowSurface = WindowSurface(vkInstance, window.glfwWindow);
@@ -26,9 +27,13 @@ public:
     auto logicalDevice = LogicalDevice(physicalDevice);
     auto [graphicsQueue, surfaceQueue] = DeviceQueue::get(
         logicalDevice.vkDevice, physicalDevice.queueFamilyIndices);
+    auto swapChain = SwapChain(
+        physicalDevice.vkPhysicalDevice, physicalDevice.queueFamilyIndices,
+        logicalDevice.vkDevice, windowSurface.vkSurface, window.glfwWindow);
 
     window.render();
 
+    swapChain.kill(logicalDevice.vkDevice);
     logicalDevice.kill();
     if (enablesValidationLayer)
       debugMessenger.kill(vkInstance);
