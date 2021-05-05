@@ -5,6 +5,7 @@
 
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/deviceQueue.cc"
+#include "vulkan/graphicsPipeline/graphicsPipeline.cc"
 #include "vulkan/imageView.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
@@ -26,17 +27,20 @@ public:
     auto debugMessenger = DebugMessenger(vkInstance);
     auto physicalDevice = PhysicalDevice(vkInstance, windowSurface.vkSurface);
     auto logicalDevice = LogicalDevice(physicalDevice);
-    auto [graphicsQueue, surfaceQueue] = DeviceQueue::get(
-        logicalDevice.vkDevice, physicalDevice.queueFamilyIndices);
-    auto swapChain = SwapChain(
-        physicalDevice.vkPhysicalDevice, physicalDevice.queueFamilyIndices,
-        logicalDevice.vkDevice, windowSurface.vkSurface, window.glfwWindow);
-    auto imageView = ImageView(logicalDevice.vkDevice, swapChain);
+    auto vkDevice = logicalDevice.vkDevice;
+    auto [graphicsQueue, surfaceQueue] =
+        DeviceQueue::get(vkDevice, physicalDevice.queueFamilyIndices);
+    auto swapChain = SwapChain(physicalDevice.vkPhysicalDevice,
+                               physicalDevice.queueFamilyIndices, vkDevice,
+                               windowSurface.vkSurface, window.glfwWindow);
+    auto imageView = ImageView(vkDevice, swapChain);
+    auto graphicsPipeline = GraphicsPipeline(vkDevice);
 
     window.render();
 
-    imageView.kill(logicalDevice.vkDevice);
-    swapChain.kill(logicalDevice.vkDevice);
+    graphicsPipeline.kill(vkDevice);
+    imageView.kill(vkDevice);
+    swapChain.kill(vkDevice);
     logicalDevice.kill();
     if (enablesValidationLayer)
       debugMessenger.kill(vkInstance);
