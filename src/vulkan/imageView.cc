@@ -6,9 +6,10 @@
 #include <vulkan/vulkan.h>
 
 class ImageView {
-  std::vector<VkImageView> swapChainImageViews;
 
 public:
+  std::vector<VkImageView> swapChainImageViews;
+
   ImageView(VkDevice device, SwapChain swapChain) {
     auto images = swapChain.getImages(device);
     this->swapChainImageViews.resize(images.size());

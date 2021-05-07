@@ -18,9 +18,10 @@ class Pipeline {
   VkPipeline vkPipeline;
   PipelineLayout layout;
   ShaderStage shaderStage;
-  RenderPass renderPass;
 
 public:
+  RenderPass renderPass;
+
   Pipeline(VkDevice device, VkFormat format, VkExtent2D extent2D) {
     this->shaderStage = ShaderStage(device);
     this->layout = PipelineLayout(device);
@@ -58,14 +59,13 @@ public:
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &createInfo,
                                   nullptr, &this->vkPipeline) != VK_SUCCESS)
       throw std::runtime_error("failed to create graphics pipeline!");
-
-    this->renderPass.kill(device);
-    this->layout.kill(device);
-    this->shaderStage.kill(device);
   }
 
   void kill(VkDevice device) {
     vkDestroyPipeline(device, this->vkPipeline, nullptr);
+    this->renderPass.kill(device);
+    this->layout.kill(device);
+    this->shaderStage.kill(device);
   }
 };
 

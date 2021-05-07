@@ -5,6 +5,7 @@
 
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/deviceQueue.cc"
+#include "vulkan/framebuffer.cc"
 #include "vulkan/imageView.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
@@ -35,9 +36,13 @@ public:
                                windowSurface.vkSurface, window.glfwWindow);
     auto imageView = ImageView(vkDevice, swapChain);
     auto pipeline = Pipeline(vkDevice, swapChain.format, swapChain.extent);
+    auto framebuffer = Framebuffer(imageView.swapChainImageViews,
+                                   pipeline.renderPass.vkRenderPass,
+                                   swapChain.extent, vkDevice);
 
     window.render();
 
+    framebuffer.kill(vkDevice);
     pipeline.kill(vkDevice);
     imageView.kill(vkDevice);
     swapChain.kill(vkDevice);
