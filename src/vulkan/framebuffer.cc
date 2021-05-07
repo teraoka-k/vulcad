@@ -5,9 +5,10 @@
 #include <vulkan/vulkan.h>
 
 class Framebuffer {
-  std::vector<VkFramebuffer> swapChainFramebuffers;
 
 public:
+  std::vector<VkFramebuffer> swapChainFramebuffers;
+
   Framebuffer(std::vector<VkImageView> swapChainImageViews,
               VkRenderPass renderPass, VkExtent2D swapChainExtent,
               VkDevice device) {

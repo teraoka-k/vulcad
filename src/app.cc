@@ -3,6 +3,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vulkan/command/commandBuffer.cc"
+#include "vulkan/command/commandPool.cc"
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/deviceQueue.cc"
 #include "vulkan/framebuffer.cc"
@@ -39,9 +41,15 @@ public:
     auto framebuffer = Framebuffer(imageView.swapChainImageViews,
                                    pipeline.renderPass.vkRenderPass,
                                    swapChain.extent, vkDevice);
+    auto commandPool = CommandPool(physicalDevice.queueFamilyIndices, vkDevice);
+    auto commandBuffer =
+        CommandBuffer(framebuffer.swapChainFramebuffers,
+                      commandPool.vkCommandPool, vkDevice, swapChain.extent,
+                      pipeline.renderPass.vkRenderPass, pipeline.vkPipeline);
 
     window.render();
 
+    commandPool.kill(vkDevice);
     framebuffer.kill(vkDevice);
     pipeline.kill(vkDevice);
     imageView.kill(vkDevice);

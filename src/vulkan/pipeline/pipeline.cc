@@ -15,12 +15,12 @@
 #include <vulkan/vulkan.h>
 
 class Pipeline {
-  VkPipeline vkPipeline;
   PipelineLayout layout;
   ShaderStage shaderStage;
 
 public:
   RenderPass renderPass;
+  VkPipeline vkPipeline;
 
   Pipeline(VkDevice device, VkFormat format, VkExtent2D extent2D) {
     this->shaderStage = ShaderStage(device);
