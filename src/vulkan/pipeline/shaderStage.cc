@@ -1,18 +1,16 @@
-#if !defined(TUTORIAL_VULKAN_GRAPHICS_PIPELINE_GRAPHICS_PIPELINE)
-#define TUTORIAL_VULKAN_GRAPHICS_PIPELINE_GRAPHICS_PIPELINE
+#if !defined(TUTORIAL_VULKAN_SHADER_STAGE)
+#define TUTORIAL_VULKAN_SHADER_STAGE
 
-#include "../../util/readFile.cc"
-#include <string>
 #include <vulkan/vulkan.h>
 
 const std::string SHADER_DIR = "shaders/";
 
-class GraphicsPipeline {
+class ShaderStage {
   VkShaderModule vertShaderModule;
   VkShaderModule fragShaderModule;
 
 public:
-  GraphicsPipeline(VkDevice device) {
+  ShaderStage(VkDevice device) {
     auto vertShaderStageInfo = this->getShaderStageCreateInfo(
         VK_SHADER_STAGE_VERTEX_BIT,
         (this->vertShaderModule =
@@ -25,6 +23,8 @@ public:
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo,
                                                       fragShaderStageInfo};
   }
+  // only to use ShaderStage as class member variable of another class
+  ShaderStage() {}
 
   void kill(VkDevice device) {
     vkDestroyShaderModule(device, this->fragShaderModule, nullptr);
@@ -58,4 +58,4 @@ private:
   }
 };
 
-#endif // TUTORIAL_VULKAN_GRAPHICS_PIPELINE_GRAPHICS_PIPELINE
+#endif // TUTORIAL_VULKAN_SHADER_STAGE

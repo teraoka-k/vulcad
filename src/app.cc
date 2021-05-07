@@ -5,11 +5,11 @@
 
 #include "vulkan/debugMessenger.cc"
 #include "vulkan/deviceQueue.cc"
-#include "vulkan/graphicsPipeline/graphicsPipeline.cc"
 #include "vulkan/imageView.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
+#include "vulkan/pipeline/pipeline.cc"
 #include "vulkan/swapChain.cc"
 #include "vulkan/windowSurface.cc"
 #include "window/window.cc"
@@ -34,11 +34,11 @@ public:
                                physicalDevice.queueFamilyIndices, vkDevice,
                                windowSurface.vkSurface, window.glfwWindow);
     auto imageView = ImageView(vkDevice, swapChain);
-    auto graphicsPipeline = GraphicsPipeline(vkDevice);
+    auto pipeline = Pipeline(vkDevice, swapChain.format);
 
     window.render();
 
-    graphicsPipeline.kill(vkDevice);
+    pipeline.kill(vkDevice);
     imageView.kill(vkDevice);
     swapChain.kill(vkDevice);
     logicalDevice.kill();
