@@ -4,9 +4,10 @@
 #include <vulkan/vulkan.h>
 
 class PipelineLayout {
-  VkPipelineLayout vkPipelineLayout;
 
 public:
+  VkPipelineLayout vkPipelineLayout;
+
   PipelineLayout() {} // only to use this instance as a class member variable
   PipelineLayout(VkDevice device) {
     VkPipelineLayoutCreateInfo createInfo = {

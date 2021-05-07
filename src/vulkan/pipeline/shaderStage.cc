@@ -10,18 +10,18 @@ class ShaderStage {
   VkShaderModule fragShaderModule;
 
 public:
+  VkPipelineShaderStageCreateInfo vertShaderStageCreateInfo;
+  VkPipelineShaderStageCreateInfo fragShaderStageCreateInfo;
+
   ShaderStage(VkDevice device) {
-    auto vertShaderStageInfo = this->getShaderStageCreateInfo(
+    this->vertShaderStageCreateInfo = this->getShaderStageCreateInfo(
         VK_SHADER_STAGE_VERTEX_BIT,
         (this->vertShaderModule =
              this->createShaderModule(device, "vert.spv")));
-    auto fragShaderStageInfo = this->getShaderStageCreateInfo(
+    this->fragShaderStageCreateInfo = this->getShaderStageCreateInfo(
         VK_SHADER_STAGE_FRAGMENT_BIT,
         (this->fragShaderModule =
              this->createShaderModule(device, "frag.spv")));
-
-    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo,
-                                                      fragShaderStageInfo};
   }
   // only to use ShaderStage as class member variable of another class
   ShaderStage() {}

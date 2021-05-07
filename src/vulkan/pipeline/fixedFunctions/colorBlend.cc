@@ -4,10 +4,12 @@
 #include <vulkan/vulkan.h>
 
 class ColorBlend {
+  // store the variable in static memory to avoid segmentation faults
+  inline static VkPipelineColorBlendAttachmentState attachment = {};
+
+public:
   static VkPipelineColorBlendStateCreateInfo getCreateInfo() {
-    auto attachment = VkPipelineColorBlendAttachmentState{
-        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    ColorBlend::attachment = {
         .blendEnable = VK_FALSE,
         .srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
         .dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
@@ -15,19 +17,22 @@ class ColorBlend {
         .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
         .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
         .alphaBlendOp = VK_BLEND_OP_ADD,
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     };
 
-    return {
+    auto createInfo = VkPipelineColorBlendStateCreateInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .logicOpEnable = VK_FALSE,
         .logicOp = VK_LOGIC_OP_COPY,
         .attachmentCount = 1,
-        .pAttachments = &attachment,
-        .blendConstants[0] = 0.0f,
-        .blendConstants[1] = 0.0f,
-        .blendConstants[2] = 0.0f,
-        .blendConstants[3] = 0.0f,
+        .pAttachments = &ColorBlend::attachment,
     };
+    createInfo.blendConstants[0] = 0.0f;
+    createInfo.blendConstants[1] = 0.0f;
+    createInfo.blendConstants[2] = 0.0f;
+    createInfo.blendConstants[3] = 0.0f;
+    return createInfo;
   }
 };
 

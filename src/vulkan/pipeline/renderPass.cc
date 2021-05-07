@@ -5,9 +5,9 @@
 
 class RenderPass {
 
+public:
   VkRenderPass vkRenderPass;
 
-public:
   RenderPass() {} // only to use this instance as class member variable
   RenderPass(VkFormat format, VkDevice device) {
     auto attachmentDescription = this->getAttachmentDescription(format);

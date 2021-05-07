@@ -34,7 +34,7 @@ public:
                                physicalDevice.queueFamilyIndices, vkDevice,
                                windowSurface.vkSurface, window.glfwWindow);
     auto imageView = ImageView(vkDevice, swapChain);
-    auto pipeline = Pipeline(vkDevice, swapChain.format);
+    auto pipeline = Pipeline(vkDevice, swapChain.format, swapChain.extent);
 
     window.render();
 

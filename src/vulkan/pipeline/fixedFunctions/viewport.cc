@@ -4,9 +4,14 @@
 #include <vulkan/vulkan.h>
 
 class Viewport {
+  // save variable in static memory to avoid segmentation fault
+  inline static VkViewport viewport;
+  inline static VkRect2D scissor;
+
+public:
   static VkPipelineViewportStateCreateInfo
   getCreateInfo(VkExtent2D swapChainExtent) {
-    auto viewport = VkViewport{
+    Viewport::viewport = VkViewport{
         .x = 0.0f,
         .y = 0.0f,
         .width = (float)swapChainExtent.width,
@@ -14,7 +19,7 @@ class Viewport {
         .minDepth = 0.0f,
         .maxDepth = 1.0f,
     };
-    auto scissor = VkRect2D{
+    Viewport::scissor = VkRect2D{
         .offset = {0, 0},
         .extent = swapChainExtent,
     };
@@ -22,9 +27,9 @@ class Viewport {
     return {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .viewportCount = 1,
-        .pViewports = &viewport,
+        .pViewports = &Viewport::viewport,
         .scissorCount = 1,
-        .pScissors = &scissor,
+        .pScissors = &Viewport::scissor,
     };
   }
 };

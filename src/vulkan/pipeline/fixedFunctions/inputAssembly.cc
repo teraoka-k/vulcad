@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 class InputAssembly {
+public:
   static VkPipelineInputAssemblyStateCreateInfo getCreateInfo() {
     return {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
