@@ -9,6 +9,7 @@ class Framebuffer {
 public:
   std::vector<VkFramebuffer> swapChainFramebuffers;
 
+  Framebuffer() {}
   Framebuffer(std::vector<VkImageView> swapChainImageViews,
               VkRenderPass renderPass, VkExtent2D swapChainExtent,
               VkDevice device) {

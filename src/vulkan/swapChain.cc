@@ -24,6 +24,7 @@ public:
   inline static const std::vector<const char *> EXTENSION_NAMES = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+  SwapChain() {}
   SwapChain(VkPhysicalDevice physicalDevice,
             QueueFamilyIndices queueFamilyIndices, VkDevice logicalDevice,
             VkSurfaceKHR surface, GLFWwindow *window) {

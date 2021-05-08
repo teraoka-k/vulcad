@@ -22,6 +22,7 @@ public:
   RenderPass renderPass;
   VkPipeline vkPipeline;
 
+  Pipeline() {}
   Pipeline(VkDevice device, VkFormat format, VkExtent2D extent2D) {
     this->shaderStage = ShaderStage(device);
     this->layout = PipelineLayout(device);

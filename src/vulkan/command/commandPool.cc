@@ -9,6 +9,7 @@ class CommandPool {
 public:
   VkCommandPool vkCommandPool;
 
+  CommandPool() {}
   CommandPool(QueueFamilyIndices queueFamilyIndices, VkDevice device) {
     auto createInfo = this->getCreateInfo(queueFamilyIndices);
     if (vkCreateCommandPool(device, &createInfo, nullptr, &vkCommandPool) !=

@@ -10,6 +10,7 @@ class ImageView {
 public:
   std::vector<VkImageView> swapChainImageViews;
 
+  ImageView() {}
   ImageView(VkDevice device, SwapChain swapChain) {
     auto images = swapChain.getImages(device);
     this->swapChainImageViews.resize(images.size());

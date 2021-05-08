@@ -10,6 +10,7 @@ class CommandBuffer {
 public:
   std::vector<VkCommandBuffer> commandBuffers;
 
+  CommandBuffer() {}
   CommandBuffer(std::vector<VkFramebuffer> swapChainFramebuffers,
                 VkCommandPool commandPool, VkDevice device,
                 VkExtent2D swapChainExtent, VkRenderPass renderPass,
@@ -20,6 +21,12 @@ public:
                                  this->commandBuffers.data()) != VK_SUCCESS)
       throw std::runtime_error("failed to allocate command buffers!");
     this->record(swapChainExtent, renderPass, swapChainFramebuffers, pipeline);
+  }
+
+  void kill(VkDevice device, VkCommandPool commandPool) {
+    vkFreeCommandBuffers(device, commandPool,
+                         static_cast<uint32_t>(this->commandBuffers.size()),
+                         this->commandBuffers.data());
   }
 
 private:
