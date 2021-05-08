@@ -8,17 +8,17 @@
 class DeviceQueue {
 public:
   /**
-   * @return [graphicsQueue, surfaceQueue]
+   * @return [graphicsQueue, presentQueue]
    */
   static std::tuple<VkQueue, VkQueue>
   get(VkDevice device, QueueFamilyIndices queueFamilyIndices) {
     VkQueue graphicsQueue;
-    VkQueue surfaceQueue;
+    VkQueue presentQueue;
     vkGetDeviceQueue(device, queueFamilyIndices.graphicsFamilyIndex.value(), 0,
                      &graphicsQueue);
     vkGetDeviceQueue(device, queueFamilyIndices.surfaceFamilyIndex.value(), 0,
-                     &surfaceQueue);
-    return std::make_tuple(graphicsQueue, surfaceQueue);
+                     &presentQueue);
+    return std::make_tuple(graphicsQueue, presentQueue);
   }
 };
 

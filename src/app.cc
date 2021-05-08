@@ -13,6 +13,7 @@
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
 #include "vulkan/pipeline/pipeline.cc"
+#include "vulkan/semaphoreAndFence.cc"
 #include "vulkan/swapChain.cc"
 #include "vulkan/windowSurface.cc"
 #include "window/window.cc"
@@ -23,15 +24,17 @@ class App {
 
 public:
   static void run() {
+    // setup
     auto window = Window(800, 600);
     auto instance = Instance();
     auto vkInstance = instance.vkInstance;
     auto windowSurface = WindowSurface(vkInstance, window.glfwWindow);
-    auto debugMessenger = DebugMessenger(vkInstance);
+    auto debugMessenger =
+        enablesValidationLayer ? DebugMessenger(vkInstance) : NULL;
     auto physicalDevice = PhysicalDevice(vkInstance, windowSurface.vkSurface);
     auto logicalDevice = LogicalDevice(physicalDevice);
     auto vkDevice = logicalDevice.vkDevice;
-    auto [graphicsQueue, surfaceQueue] =
+    auto [graphicsQueue, presentQueue] =
         DeviceQueue::get(vkDevice, physicalDevice.queueFamilyIndices);
     auto swapChain = SwapChain(physicalDevice.vkPhysicalDevice,
                                physicalDevice.queueFamilyIndices, vkDevice,
@@ -46,9 +49,15 @@ public:
         CommandBuffer(framebuffer.swapChainFramebuffers,
                       commandPool.vkCommandPool, vkDevice, swapChain.extent,
                       pipeline.renderPass.vkRenderPass, pipeline.vkPipeline);
+    auto semaphoreAndFence =
+        SemaphoreAndFence(vkDevice, imageView.swapChainImageViews.size());
 
-    window.render();
+    // main loop
+    window.render(vkDevice, swapChain.vkSwapChain, semaphoreAndFence,
+                  commandBuffer.commandBuffers, graphicsQueue, presentQueue);
 
+    // release memory before exit
+    semaphoreAndFence.kill(vkDevice);
     commandPool.kill(vkDevice);
     framebuffer.kill(vkDevice);
     pipeline.kill(vkDevice);

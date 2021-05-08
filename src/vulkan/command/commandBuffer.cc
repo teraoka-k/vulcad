@@ -6,9 +6,10 @@
 #include <vulkan/vulkan.h>
 
 class CommandBuffer {
-  std::vector<VkCommandBuffer> commandBuffers;
 
 public:
+  std::vector<VkCommandBuffer> commandBuffers;
+
   CommandBuffer(std::vector<VkFramebuffer> swapChainFramebuffers,
                 VkCommandPool commandPool, VkDevice device,
                 VkExtent2D swapChainExtent, VkRenderPass renderPass,
@@ -36,7 +37,7 @@ private:
               VkPipeline pipeline) {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .flags = 0,
+        .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
         .pInheritanceInfo = nullptr,
     };
     for (int i = 0; i < this->commandBuffers.size(); i++) {
@@ -55,15 +56,15 @@ private:
                         VkFramebuffer swapChainFramebuffer,
                         VkCommandBuffer *commandBuffer, VkPipeline pipeline) {
     VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-    VkRect2D renderArea = {
-        .offset = {0, 0},
-        .extent = swapChainExtent,
-    };
     VkRenderPassBeginInfo renderPassInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .renderPass = renderPass,
         .framebuffer = swapChainFramebuffer,
-        .renderArea = renderArea,
+        .renderArea =
+            {
+                .offset = {0, 0},
+                .extent = swapChainExtent,
+            },
         .clearValueCount = 1,
         .pClearValues = &clearColor,
     };
