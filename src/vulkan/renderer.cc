@@ -23,11 +23,21 @@ class Renderer {
   Pipeline pipeline;
   SemaphoreAndFence semaphoreAndFence;
   SwapChain swapChain;
+  VertexBuffer vertexBuffer;
+  VkQueue graphicsQueue;
+  VkQueue presentQueue;
 
 public:
   Renderer(VkDevice device, PhysicalDevice physicalDevice, VkSurfaceKHR surface,
-           GLFWwindow *window, VertexBuffer vertexBuffer) {
+           GLFWwindow *window) {
+    auto [graphicsQueue, presentQueue] =
+        DeviceQueue::get(device, physicalDevice.queueFamilyIndices);
+    this->graphicsQueue = graphicsQueue;
+    this->presentQueue = presentQueue;
     this->commandPool = CommandPool(physicalDevice.queueFamilyIndices, device);
+    this->vertexBuffer =
+        VertexBuffer(device, physicalDevice, this->commandPool.vkCommandPool,
+                     this->graphicsQueue);
     this->createSwapChain(device, physicalDevice, surface, window,
                           vertexBuffer);
     this->semaphoreAndFence =
@@ -40,9 +50,7 @@ public:
    *  and return before GPU finishes commands
    */
   void drawFrame(VkDevice device, PhysicalDevice physicalDevice,
-                 VkSurfaceKHR surface, GLFWwindow *window,
-                 VkQueue graphicsQueue, VkQueue presentQueue,
-                 VertexBuffer vertexBuffer) {
+                 VkSurfaceKHR surface, GLFWwindow *window) {
     auto &imageState = this->semaphoreAndFence.images[this->frameIndex];
     vkWaitForFences(device, 1, &imageState.isInUse, VK_TRUE, UINT64_MAX);
     uint32_t imageIndex;
@@ -52,18 +60,16 @@ public:
                                         VK_NULL_HANDLE, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
       return this->recreateSwapChain(device, physicalDevice, surface, window,
-                                     vertexBuffer);
+                                     this->vertexBuffer);
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
     vkResetFences(device, 1, &imageState.isInUse);
     this->queueSubmit(imageState,
-                      &this->commandBuffer.commandBuffers[imageIndex],
-                      graphicsQueue);
+                      &this->commandBuffer.commandBuffers[imageIndex]);
 
     result = this->queuePresent(&this->swapChain.vkSwapChain,
-                                &imageState.isReadyToPresent, &imageIndex,
-                                presentQueue);
+                                &imageState.isReadyToPresent, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
       return this->recreateSwapChain(device, physicalDevice, surface, window,
                                      vertexBuffer);
@@ -75,6 +81,7 @@ public:
 
   void kill(VkDevice device) {
     this->semaphoreAndFence.kill(device);
+    this->vertexBuffer.kill(device);
     this->commandPool.kill(device);
     this->framebuffer.kill(device);
     this->pipeline.kill(device);
@@ -116,7 +123,7 @@ private:
   }
 
   VkResult queuePresent(VkSwapchainKHR *swapChain, VkSemaphore *pWaitSemaphore,
-                        uint *imageIndex, VkQueue presentQueue) {
+                        uint *imageIndex) {
     VkPresentInfoKHR presentInfo = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .waitSemaphoreCount = 1,
@@ -126,11 +133,10 @@ private:
         .pImageIndices = imageIndex,
         .pResults = nullptr,
     };
-    return vkQueuePresentKHR(presentQueue, &presentInfo);
+    return vkQueuePresentKHR(this->presentQueue, &presentInfo);
   }
 
-  void queueSubmit(imageState &imageState, VkCommandBuffer *commandBuffer,
-                   VkQueue graphicsQueue) {
+  void queueSubmit(imageState &imageState, VkCommandBuffer *commandBuffer) {
     VkPipelineStageFlags waitDstStageMask =
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submitInfo = {
@@ -143,8 +149,8 @@ private:
         .signalSemaphoreCount = 1,
         .pSignalSemaphores = &imageState.isReadyToPresent,
     };
-    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, imageState.isInUse) !=
-        VK_SUCCESS)
+    if (vkQueueSubmit(this->graphicsQueue, 1, &submitInfo,
+                      imageState.isInUse) != VK_SUCCESS)
       throw std::runtime_error("failed to submit draw command buffer!");
   }
 };

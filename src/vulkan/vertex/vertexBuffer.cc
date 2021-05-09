@@ -14,13 +14,18 @@ public:
   std::vector<Vertex> vertices;
 
   VertexBuffer() {}
-  VertexBuffer(VkDevice device, PhysicalDevice physicalDevice) {
+  VertexBuffer(VkDevice device, PhysicalDevice physicalDevice,
+               VkCommandPool &commandPool, VkQueue graphicsQueue) {
     this->vertices = {{{0, -.5, 0}, {.5, .5, 0}},
                       {{.5, .5, 0}, {0, .5, .5}},
                       {{-.5, .5, 0}, {.5, 0, .5}}};
-    this->createBuffer(device);
-    this->allocateMemory(device, physicalDevice);
-    this->writeToDevice(device);
+    auto bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
+
+    this->create(
+        device, physicalDevice, bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vkBuffer, this->memory);
+    this->write(device, physicalDevice, bufferSize, commandPool, graphicsQueue);
   }
 
   void kill(VkDevice device) {
@@ -29,46 +34,97 @@ public:
   }
 
 private:
-  void allocateMemory(VkDevice device, PhysicalDevice physicalDevice) {
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(device, this->vkBuffer, &memoryRequirements);
-    VkMemoryAllocateInfo allocInfo = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = memoryRequirements.size,
-        .memoryTypeIndex = physicalDevice.findMemoryType(
-            memoryRequirements.memoryTypeBits,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
-
+  void copyBuffer(VkDevice device, VkCommandPool &commandPool,
+                  VkBuffer srcBuffer, VkBuffer dstBuffer,
+                  VkDeviceSize deviceSize, VkQueue &graphicsQueue) {
+    VkCommandBufferAllocateInfo allocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .commandPool = commandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1,
     };
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &this->memory) !=
-        VK_SUCCESS)
-      throw std::runtime_error("failed to allocate vertex buffer memory!");
-    vkBindBufferMemory(device, this->vkBuffer, this->memory, 0);
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(device, &allocateInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+    };
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+    VkBufferCopy copyRegion = {
+        .srcOffset = 0,
+        .dstOffset = 0,
+        .size = deviceSize,
+    };
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &commandBuffer,
+    };
+    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphicsQueue);
+    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
   }
 
-  void createBuffer(VkDevice device) {
+  void create(VkDevice device, PhysicalDevice physicalDevice, VkDeviceSize size,
+              VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties,
+              VkBuffer &buffer, VkDeviceMemory &bufferMemory) {
     VkBufferCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = this->getSizeInByte(),
-        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        .size = size,
+        .usage = usage,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     };
-    if (vkCreateBuffer(device, &createInfo, nullptr, &this->vkBuffer) !=
-        VK_SUCCESS)
+    if (vkCreateBuffer(device, &createInfo, nullptr, &buffer) != VK_SUCCESS)
       throw std::runtime_error("failed to create vertex buffer!");
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = memRequirements.size,
+        .memoryTypeIndex = physicalDevice.findMemoryType(
+            memRequirements.memoryTypeBits, memoryProperties),
+    };
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) !=
+        VK_SUCCESS)
+      throw std::runtime_error("failed to allocate buffer memory!");
+
+    vkBindBufferMemory(device, buffer, bufferMemory, 0);
   }
 
-  void writeToDevice(VkDevice device) {
+  void write(VkDevice device, PhysicalDevice physicalDevice,
+             VkDeviceSize bufferSize, VkCommandPool &commandPool,
+             VkQueue graphicsQueue) {
+    // create staging buffer
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    this->create(device, physicalDevice, bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 stagingBuffer, stagingBufferMemory);
+
+    // write vertices to staging buffer
     void *data;
-    auto size = this->getSizeInByte();
-    vkMapMemory(device, this->memory, 0, size, 0, &data);
-    memcpy(data, this->vertices.data(), (size_t)size);
-    vkUnmapMemory(device, this->memory);
-  }
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, this->vertices.data(), (size_t)bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory);
 
-  uint64_t getSizeInByte() {
-    return sizeof(this->vertices[0]) * this->vertices.size();
+    // copy data from staging buffer to vertex buffer
+    this->copyBuffer(device, commandPool, stagingBuffer, this->vkBuffer,
+                     bufferSize, graphicsQueue);
+
+    // clear staging buffer
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
   }
 };
 

@@ -1,9 +1,9 @@
 #if !defined(TUTORIAL_WINDOW_WINDOW)
 #define TUTORIAL_WINDOW_WINDOW
 
+#include "../vulkan/deviceQueue.cc"
 #include "../vulkan/renderer.cc"
 #include "../vulkan/semaphoreAndFence.cc"
-#include "../vulkan/vertex/vertexBuffer.cc"
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -25,14 +25,11 @@ public:
   }
 
   void render(VkDevice device, PhysicalDevice physicalDevice,
-              VkSurfaceKHR surface, GLFWwindow *window, VkQueue graphicsQueue,
-              VkQueue presentQueue, VertexBuffer vertexBuffer) {
-    auto renderer =
-        Renderer(device, physicalDevice, surface, window, vertexBuffer);
+              VkSurfaceKHR surface, GLFWwindow *window) {
+    auto renderer = Renderer(device, physicalDevice, surface, window);
     while (!glfwWindowShouldClose(this->glfwWindow)) {
       glfwPollEvents();
-      renderer.drawFrame(device, physicalDevice, surface, window, graphicsQueue,
-                         presentQueue, vertexBuffer);
+      renderer.drawFrame(device, physicalDevice, surface, window);
     }
     vkDeviceWaitIdle(device);
     renderer.kill(device);

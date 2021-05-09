@@ -4,11 +4,9 @@
 #include <vulkan/vulkan.h>
 
 #include "vulkan/debugMessenger.cc"
-#include "vulkan/deviceQueue.cc"
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
-#include "vulkan/vertex/vertexBuffer.cc"
 #include "vulkan/windowSurface.cc"
 #include "window/window.cc"
 
@@ -26,16 +24,12 @@ public:
     auto physicalDevice = PhysicalDevice(vkInstance, windowSurface.vkSurface);
     auto logicalDevice = LogicalDevice(physicalDevice);
     auto vkDevice = logicalDevice.vkDevice;
-    auto [graphicsQueue, presentQueue] =
-        DeviceQueue::get(vkDevice, physicalDevice.queueFamilyIndices);
-    auto vertexBuffer = VertexBuffer(vkDevice, physicalDevice);
 
     // main loop
     window.render(vkDevice, physicalDevice, windowSurface.vkSurface,
-                  window.glfwWindow, graphicsQueue, presentQueue, vertexBuffer);
+                  window.glfwWindow);
 
     // release memory before exit
-    vertexBuffer.kill(vkDevice);
     logicalDevice.kill();
     if (enablesValidationLayer)
       debugMessenger.kill(vkInstance);
