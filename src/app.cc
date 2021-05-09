@@ -8,7 +8,6 @@
 #include "vulkan/instance.cc"
 #include "vulkan/logicalDevice.cc"
 #include "vulkan/physicalDevice.cc"
-#include "vulkan/renderer.cc"
 #include "vulkan/windowSurface.cc"
 #include "window/window.cc"
 
@@ -29,15 +28,11 @@ public:
     auto [graphicsQueue, presentQueue] =
         DeviceQueue::get(vkDevice, physicalDevice.queueFamilyIndices);
 
-    auto renderer = Renderer(vkDevice, physicalDevice, windowSurface.vkSurface,
-                             window.glfwWindow);
-
     // main loop
-    window.render(renderer, vkDevice, physicalDevice, windowSurface.vkSurface,
+    window.render(vkDevice, physicalDevice, windowSurface.vkSurface,
                   window.glfwWindow, graphicsQueue, presentQueue);
 
     // release memory before exit
-    renderer.kill(vkDevice);
     logicalDevice.kill();
     if (enablesValidationLayer)
       debugMessenger.kill(vkInstance);

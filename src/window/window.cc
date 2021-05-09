@@ -9,8 +9,6 @@
 #include <vulkan/vulkan.h>
 
 class Window {
-  inline static bool resized = false;
-
 public:
   GLFWwindow *glfwWindow = NULL;
 
@@ -28,17 +26,17 @@ public:
     glfwTerminate();
   }
 
-  void render(Renderer renderer, VkDevice device, PhysicalDevice physicalDevice,
+  void render(VkDevice device, PhysicalDevice physicalDevice,
               VkSurfaceKHR surface, GLFWwindow *window, VkQueue graphicsQueue,
               VkQueue presentQueue) {
+    auto renderer = Renderer(device, physicalDevice, surface, window);
     while (!glfwWindowShouldClose(this->glfwWindow)) {
       glfwPollEvents();
-      if (Window::resized)
-        renderer.recreateSwapChain(device, physicalDevice, surface, window);
       renderer.drawFrame(device, physicalDevice, surface, window, graphicsQueue,
                          presentQueue);
     }
     vkDeviceWaitIdle(device);
+    renderer.kill(device);
   }
 };
 

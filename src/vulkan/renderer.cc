@@ -42,7 +42,6 @@ public:
                  VkQueue graphicsQueue, VkQueue presentQueue) {
     auto &imageState = this->semaphoreAndFence.images[this->frameIndex];
     vkWaitForFences(device, 1, &imageState.isInUse, VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &imageState.isInUse);
     uint32_t imageIndex;
 
     auto result = vkAcquireNextImageKHR(device, this->swapChain.vkSwapChain,
@@ -53,6 +52,7 @@ public:
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
+    vkResetFences(device, 1, &imageState.isInUse);
     this->queueSubmit(imageState,
                       &this->commandBuffer.commandBuffers[imageIndex],
                       graphicsQueue);
@@ -71,13 +71,20 @@ public:
   void kill(VkDevice device) {
     this->semaphoreAndFence.kill(device);
     this->commandPool.kill(device);
-    this->killSwapChain(device, false);
+    this->framebuffer.kill(device);
+    this->pipeline.kill(device);
+    this->imageView.kill(device);
+    this->swapChain.kill(device);
   }
 
   void recreateSwapChain(VkDevice device, PhysicalDevice physicalDevice,
                          VkSurfaceKHR surface, GLFWwindow *window) {
     vkDeviceWaitIdle(device);
-    this->killSwapChain(device);
+    this->commandBuffer.kill(device, this->commandPool.vkCommandPool);
+    this->framebuffer.kill(device);
+    this->pipeline.kill(device);
+    this->imageView.kill(device);
+    this->swapChain.kill(device);
     this->createSwapChain(device, physicalDevice, surface, window);
   }
 
@@ -97,15 +104,6 @@ private:
         this->framebuffer.swapChainFramebuffers,
         this->commandPool.vkCommandPool, device, this->swapChain.extent,
         this->pipeline.renderPass.vkRenderPass, this->pipeline.vkPipeline);
-  }
-
-  void killSwapChain(VkDevice device, bool killsCommandBuffer = true) {
-    if (killsCommandBuffer)
-      this->commandBuffer.kill(device, this->commandPool.vkCommandPool);
-    this->framebuffer.kill(device);
-    this->pipeline.kill(device);
-    this->imageView.kill(device);
-    this->swapChain.kill(device);
   }
 
   VkResult queuePresent(VkSwapchainKHR *swapChain, VkSemaphore *pWaitSemaphore,
