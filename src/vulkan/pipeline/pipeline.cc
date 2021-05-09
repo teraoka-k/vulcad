@@ -6,7 +6,7 @@
 #include "fixedFunctions/inputAssembly.cc"
 #include "fixedFunctions/multisample.cc"
 #include "fixedFunctions/rasterization.cc"
-#include "fixedFunctions/vertextInput.cc"
+#include "fixedFunctions/vertexInput.cc"
 #include "fixedFunctions/viewport.cc"
 #include "pipelineLayout.cc"
 #include "renderPass.cc"

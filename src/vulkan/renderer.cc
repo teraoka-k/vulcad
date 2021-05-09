@@ -9,6 +9,7 @@
 #include "pipeline/pipeline.cc"
 #include "semaphoreAndFence.cc"
 #include "swapChain.cc"
+#include "vertex/vertexBuffer.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -25,9 +26,10 @@ class Renderer {
 
 public:
   Renderer(VkDevice device, PhysicalDevice physicalDevice, VkSurfaceKHR surface,
-           GLFWwindow *window) {
+           GLFWwindow *window, VertexBuffer vertexBuffer) {
     this->commandPool = CommandPool(physicalDevice.queueFamilyIndices, device);
-    this->createSwapChain(device, physicalDevice, surface, window);
+    this->createSwapChain(device, physicalDevice, surface, window,
+                          vertexBuffer);
     this->semaphoreAndFence =
         SemaphoreAndFence(device, this->imageView.swapChainImageViews.size());
   }
@@ -39,7 +41,8 @@ public:
    */
   void drawFrame(VkDevice device, PhysicalDevice physicalDevice,
                  VkSurfaceKHR surface, GLFWwindow *window,
-                 VkQueue graphicsQueue, VkQueue presentQueue) {
+                 VkQueue graphicsQueue, VkQueue presentQueue,
+                 VertexBuffer vertexBuffer) {
     auto &imageState = this->semaphoreAndFence.images[this->frameIndex];
     vkWaitForFences(device, 1, &imageState.isInUse, VK_TRUE, UINT64_MAX);
     uint32_t imageIndex;
@@ -48,7 +51,8 @@ public:
                                         UINT64_MAX / 2, imageState.exists,
                                         VK_NULL_HANDLE, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
-      return this->recreateSwapChain(device, physicalDevice, surface, window);
+      return this->recreateSwapChain(device, physicalDevice, surface, window,
+                                     vertexBuffer);
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
@@ -61,7 +65,8 @@ public:
                                 &imageState.isReadyToPresent, &imageIndex,
                                 presentQueue);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-      return this->recreateSwapChain(device, physicalDevice, surface, window);
+      return this->recreateSwapChain(device, physicalDevice, surface, window,
+                                     vertexBuffer);
     else if (result != VK_SUCCESS)
       throw std::runtime_error("failed to present swap chain image!");
 
@@ -78,19 +83,22 @@ public:
   }
 
   void recreateSwapChain(VkDevice device, PhysicalDevice physicalDevice,
-                         VkSurfaceKHR surface, GLFWwindow *window) {
+                         VkSurfaceKHR surface, GLFWwindow *window,
+                         VertexBuffer vertexBuffer) {
     vkDeviceWaitIdle(device);
     this->commandBuffer.kill(device, this->commandPool.vkCommandPool);
     this->framebuffer.kill(device);
     this->pipeline.kill(device);
     this->imageView.kill(device);
     this->swapChain.kill(device);
-    this->createSwapChain(device, physicalDevice, surface, window);
+    this->createSwapChain(device, physicalDevice, surface, window,
+                          vertexBuffer);
   }
 
 private:
   void createSwapChain(VkDevice device, PhysicalDevice physicalDevice,
-                       VkSurfaceKHR surface, GLFWwindow *window) {
+                       VkSurfaceKHR surface, GLFWwindow *window,
+                       VertexBuffer vertexBuffer) {
     this->swapChain =
         SwapChain(physicalDevice.vkPhysicalDevice,
                   physicalDevice.queueFamilyIndices, device, surface, window);
@@ -103,7 +111,8 @@ private:
     this->commandBuffer = CommandBuffer(
         this->framebuffer.swapChainFramebuffers,
         this->commandPool.vkCommandPool, device, this->swapChain.extent,
-        this->pipeline.renderPass.vkRenderPass, this->pipeline.vkPipeline);
+        this->pipeline.renderPass.vkRenderPass, this->pipeline.vkPipeline,
+        vertexBuffer);
   }
 
   VkResult queuePresent(VkSwapchainKHR *swapChain, VkSemaphore *pWaitSemaphore,

@@ -33,6 +33,19 @@ public:
       throw std::runtime_error("failed to find a suitable GPU!");
   }
 
+  uint32_t findMemoryType(uint32_t type, VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties availableProperties;
+    vkGetPhysicalDeviceMemoryProperties(this->vkPhysicalDevice,
+                                        &availableProperties);
+    for (uint32_t i = 0; i < availableProperties.memoryTypeCount; i++) {
+      if ((type & (1 << i)) &&
+          (availableProperties.memoryTypes[i].propertyFlags & properties) ==
+              properties)
+        return i;
+    }
+    throw std::runtime_error("failed to find suitable memory type!");
+  }
+
 private:
   void findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
     uint32_t queueFamilyCount = 0;

@@ -1,6 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER)
 #define TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER
 
+#include "../vertex/vertexBuffer.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -14,13 +15,14 @@ public:
   CommandBuffer(std::vector<VkFramebuffer> swapChainFramebuffers,
                 VkCommandPool commandPool, VkDevice device,
                 VkExtent2D swapChainExtent, VkRenderPass renderPass,
-                VkPipeline pipeline) {
+                VkPipeline pipeline, VertexBuffer vertexBuffer) {
     this->commandBuffers.resize(swapChainFramebuffers.size());
     auto allocateInfo = this->getAllocateInfo(commandPool);
     if (vkAllocateCommandBuffers(device, &allocateInfo,
                                  this->commandBuffers.data()) != VK_SUCCESS)
       throw std::runtime_error("failed to allocate command buffers!");
-    this->record(swapChainExtent, renderPass, swapChainFramebuffers, pipeline);
+    this->record(swapChainExtent, renderPass, swapChainFramebuffers, pipeline,
+                 vertexBuffer);
   }
 
   void kill(VkDevice device, VkCommandPool commandPool) {
@@ -41,7 +43,7 @@ private:
 
   void record(VkExtent2D swapChainExtent, VkRenderPass renderPass,
               std::vector<VkFramebuffer> swapChainFramebuffers,
-              VkPipeline pipeline) {
+              VkPipeline pipeline, VertexBuffer vertexBuffer) {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
@@ -53,7 +55,7 @@ private:
         throw std::runtime_error("failed to begin recording command buffer!");
       this->recordRenderPass(swapChainExtent, renderPass,
                              swapChainFramebuffers[i], &this->commandBuffers[i],
-                             pipeline);
+                             pipeline, vertexBuffer);
       if (vkEndCommandBuffer(this->commandBuffers[i]) != VK_SUCCESS)
         throw std::runtime_error("failed to record command buffer!");
     }
@@ -61,7 +63,8 @@ private:
 
   void recordRenderPass(VkExtent2D swapChainExtent, VkRenderPass renderPass,
                         VkFramebuffer swapChainFramebuffer,
-                        VkCommandBuffer *commandBuffer, VkPipeline pipeline) {
+                        VkCommandBuffer *commandBuffer, VkPipeline pipeline,
+                        VertexBuffer vertexBuffer) {
     VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     VkRenderPassBeginInfo renderPassInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -79,7 +82,10 @@ private:
                          VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       pipeline);
-    vkCmdDraw(*commandBuffer, 3, 1, 0, 0);
+    VkDeviceSize offsets = 0;
+    vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &vertexBuffer.vkBuffer,
+                           &offsets);
+    vkCmdDraw(*commandBuffer, vertexBuffer.vertices.size(), 1, 0, 0);
     vkCmdEndRenderPass(*commandBuffer);
   }
 };

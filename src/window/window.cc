@@ -3,8 +3,8 @@
 
 #include "../vulkan/renderer.cc"
 #include "../vulkan/semaphoreAndFence.cc"
+#include "../vulkan/vertex/vertexBuffer.cc"
 #include <GLFW/glfw3.h>
-#include <stdio.h>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -14,9 +14,7 @@ public:
 
   Window(uint32_t width = 800, uint32_t height = 400) {
     glfwInit();
-
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
     this->glfwWindow =
         glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
   }
@@ -28,12 +26,13 @@ public:
 
   void render(VkDevice device, PhysicalDevice physicalDevice,
               VkSurfaceKHR surface, GLFWwindow *window, VkQueue graphicsQueue,
-              VkQueue presentQueue) {
-    auto renderer = Renderer(device, physicalDevice, surface, window);
+              VkQueue presentQueue, VertexBuffer vertexBuffer) {
+    auto renderer =
+        Renderer(device, physicalDevice, surface, window, vertexBuffer);
     while (!glfwWindowShouldClose(this->glfwWindow)) {
       glfwPollEvents();
       renderer.drawFrame(device, physicalDevice, surface, window, graphicsQueue,
-                         presentQueue);
+                         presentQueue, vertexBuffer);
     }
     vkDeviceWaitIdle(device);
     renderer.kill(device);
