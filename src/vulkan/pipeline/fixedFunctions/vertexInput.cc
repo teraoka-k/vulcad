@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_PIPELINE_FIXED_FUNCTIONS_VERTEX_INPUT)
 #define TUTORIAL_VULKAN_PIPELINE_FIXED_FUNCTIONS_VERTEX_INPUT
 
-#include "../../vertex/vertex.cc"
+#include "../../buffer/vertex.cc"
 #include <array>
 #include <vulkan/vulkan.h>
 

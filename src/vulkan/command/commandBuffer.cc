@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER)
 #define TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER
 
-#include "../vertex/vertexBuffer.cc"
+#include "../buffer/vertexBuffer.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>

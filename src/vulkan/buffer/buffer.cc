@@ -1,42 +1,20 @@
-#if !defined(TUTORIAL_VULKAN_VERTEX_VERTEX_BUFFER)
-#define TUTORIAL_VULKAN_VERTEX_VERTEX_BUFFER
+#if !defined(TUTORIAL_VULKAN_BUFFER_BUFFER)
+#define TUTORIAL_VULKAN_BUFFER_BUFFER
 
 #include "../physicalDevice.cc"
 #include "vertex.cc"
 #include <vector>
 #include <vulkan/vulkan.h>
 
-class VertexBuffer {
+class Buffer {
+protected:
   VkDeviceMemory memory;
 
 public:
   VkBuffer vkBuffer;
-  std::vector<Vertex> vertices;
 
-  VertexBuffer() {}
-  VertexBuffer(VkDevice device, PhysicalDevice physicalDevice,
-               VkCommandPool &commandPool, VkQueue graphicsQueue) {
-    this->vertices = {{{0, -.5, 0}, {.5, .5, 0}},
-                      {{.5, .5, 0}, {0, .5, .5}},
-                      {{-.5, .5, 0}, {.5, 0, .5}}};
-    auto bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
-
-    this->create(
-        device, physicalDevice, bufferSize,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, this->vkBuffer, this->memory);
-    this->write(device, physicalDevice, bufferSize, commandPool, graphicsQueue);
-  }
-
-  void kill(VkDevice device) {
-    vkDestroyBuffer(device, this->vkBuffer, nullptr);
-    vkFreeMemory(device, this->memory, nullptr);
-  }
-
-private:
-  void copyBuffer(VkDevice device, VkCommandPool &commandPool,
-                  VkBuffer srcBuffer, VkBuffer dstBuffer,
-                  VkDeviceSize deviceSize, VkQueue &graphicsQueue) {
+  void copyTo(VkDevice device, VkCommandPool &commandPool, VkBuffer dstBuffer,
+              VkDeviceSize deviceSize, VkQueue &graphicsQueue) {
     VkCommandBufferAllocateInfo allocateInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .commandPool = commandPool,
@@ -57,7 +35,7 @@ private:
         .dstOffset = 0,
         .size = deviceSize,
     };
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(commandBuffer, this->vkBuffer, dstBuffer, 1, &copyRegion);
 
     vkEndCommandBuffer(commandBuffer);
 
@@ -71,6 +49,20 @@ private:
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
   }
 
+  void kill(VkDevice device) {
+    vkDestroyBuffer(device, this->vkBuffer, nullptr);
+    vkFreeMemory(device, this->memory, nullptr);
+  }
+
+  template <class Data>
+  void write(VkDevice device, size_t bufferSize, Data *dataToWrite) {
+    void *data;
+    vkMapMemory(device, this->memory, 0, bufferSize, 0, &data);
+    memcpy(data, dataToWrite, bufferSize);
+    vkUnmapMemory(device, this->memory);
+  }
+
+protected:
   void create(VkDevice device, PhysicalDevice physicalDevice, VkDeviceSize size,
               VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties,
               VkBuffer &buffer, VkDeviceMemory &bufferMemory) {
@@ -99,33 +91,6 @@ private:
 
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
   }
-
-  void write(VkDevice device, PhysicalDevice physicalDevice,
-             VkDeviceSize bufferSize, VkCommandPool &commandPool,
-             VkQueue graphicsQueue) {
-    // create staging buffer
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    this->create(device, physicalDevice, bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
-
-    // write vertices to staging buffer
-    void *data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, this->vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
-
-    // copy data from staging buffer to vertex buffer
-    this->copyBuffer(device, commandPool, stagingBuffer, this->vkBuffer,
-                     bufferSize, graphicsQueue);
-
-    // clear staging buffer
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-  }
 };
 
-#endif // TUTORIAL_VULKAN_VERTEX_VERTEX_BUFFER
+#endif // TUTORIAL_VULKAN_BUFFER_BUFFER

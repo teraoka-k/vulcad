@@ -1,6 +1,6 @@
 
-#if !defined(TUTORIAL_VULKAN_VERTEX_VERTEX)
-#define TUTORIAL_VULKAN_VERTEX_VERTEX
+#if !defined(TUTORIAL_VULKAN_BUFFER_VERTEX)
+#define TUTORIAL_VULKAN_BUFFER_VERTEX
 
 #include <array>
 #include <glm/glm.hpp>
@@ -31,4 +31,4 @@ struct Vertex {
   }
 };
 
-#endif // TUTORIAL_VULKAN_VERTEX_VERTEX
+#endif // TUTORIAL_VULKAN_BUFFER_VERTEX

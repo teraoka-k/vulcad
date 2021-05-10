@@ -1,6 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_RENDERER)
 #define TUTORIAL_VULKAN_RENDERER
 
+#include "buffer/vertexBuffer.cc"
 #include "command/commandBuffer.cc"
 #include "command/commandPool.cc"
 #include "framebuffer.cc"
@@ -9,7 +10,6 @@
 #include "pipeline/pipeline.cc"
 #include "semaphoreAndFence.cc"
 #include "swapChain.cc"
-#include "vertex/vertexBuffer.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
