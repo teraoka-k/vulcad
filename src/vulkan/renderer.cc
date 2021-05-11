@@ -1,7 +1,6 @@
 #if !defined(TUTORIAL_VULKAN_RENDERER)
 #define TUTORIAL_VULKAN_RENDERER
 
-#include "buffer/vertexBuffer.cc"
 #include "command/commandBuffer.cc"
 #include "command/commandPool.cc"
 #include "framebuffer.cc"
@@ -23,7 +22,6 @@ class Renderer {
   Pipeline pipeline;
   SemaphoreAndFence semaphoreAndFence;
   SwapChain swapChain;
-  VertexBuffer vertexBuffer;
   VkQueue graphicsQueue;
   VkQueue presentQueue;
 
@@ -35,11 +33,7 @@ public:
     this->graphicsQueue = graphicsQueue;
     this->presentQueue = presentQueue;
     this->commandPool = CommandPool(physicalDevice.queueFamilyIndices, device);
-    this->vertexBuffer =
-        VertexBuffer(device, physicalDevice, this->commandPool.vkCommandPool,
-                     this->graphicsQueue);
-    this->createSwapChain(device, physicalDevice, surface, window,
-                          vertexBuffer);
+    this->createSwapChain(device, physicalDevice, surface, window);
     this->semaphoreAndFence =
         SemaphoreAndFence(device, this->imageView.swapChainImageViews.size());
   }
@@ -59,8 +53,7 @@ public:
                                         UINT64_MAX / 2, imageState.exists,
                                         VK_NULL_HANDLE, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
-      return this->recreateSwapChain(device, physicalDevice, surface, window,
-                                     this->vertexBuffer);
+      return this->recreateSwapChain(device, physicalDevice, surface, window);
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
@@ -71,8 +64,7 @@ public:
     result = this->queuePresent(&this->swapChain.vkSwapChain,
                                 &imageState.isReadyToPresent, &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-      return this->recreateSwapChain(device, physicalDevice, surface, window,
-                                     vertexBuffer);
+      return this->recreateSwapChain(device, physicalDevice, surface, window);
     else if (result != VK_SUCCESS)
       throw std::runtime_error("failed to present swap chain image!");
 
@@ -81,7 +73,7 @@ public:
 
   void kill(VkDevice device) {
     this->semaphoreAndFence.kill(device);
-    this->vertexBuffer.kill(device);
+    this->commandBuffer.kill(device);
     this->commandPool.kill(device);
     this->framebuffer.kill(device);
     this->pipeline.kill(device);
@@ -90,22 +82,19 @@ public:
   }
 
   void recreateSwapChain(VkDevice device, PhysicalDevice physicalDevice,
-                         VkSurfaceKHR surface, GLFWwindow *window,
-                         VertexBuffer vertexBuffer) {
+                         VkSurfaceKHR surface, GLFWwindow *window) {
     vkDeviceWaitIdle(device);
-    this->commandBuffer.kill(device, this->commandPool.vkCommandPool);
+    this->commandBuffer.free(device, this->commandPool.vkCommandPool);
     this->framebuffer.kill(device);
     this->pipeline.kill(device);
     this->imageView.kill(device);
     this->swapChain.kill(device);
-    this->createSwapChain(device, physicalDevice, surface, window,
-                          vertexBuffer);
+    this->createSwapChain(device, physicalDevice, surface, window);
   }
 
 private:
   void createSwapChain(VkDevice device, PhysicalDevice physicalDevice,
-                       VkSurfaceKHR surface, GLFWwindow *window,
-                       VertexBuffer vertexBuffer) {
+                       VkSurfaceKHR surface, GLFWwindow *window) {
     this->swapChain =
         SwapChain(physicalDevice.vkPhysicalDevice,
                   physicalDevice.queueFamilyIndices, device, surface, window);
@@ -119,7 +108,7 @@ private:
         this->framebuffer.swapChainFramebuffers,
         this->commandPool.vkCommandPool, device, this->swapChain.extent,
         this->pipeline.renderPass.vkRenderPass, this->pipeline.vkPipeline,
-        vertexBuffer);
+        physicalDevice, this->graphicsQueue);
   }
 
   VkResult queuePresent(VkSwapchainKHR *swapChain, VkSemaphore *pWaitSemaphore,

@@ -1,5 +1,4 @@
 #include "app.cc"
-#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 

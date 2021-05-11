@@ -15,10 +15,9 @@ public:
 
   VertexBuffer() {}
   VertexBuffer(VkDevice device, PhysicalDevice physicalDevice,
-               VkCommandPool &commandPool, VkQueue graphicsQueue) {
-    this->vertices = {{{0, -.5, 0}, {.5, .5, 0}},
-                      {{.5, .5, 0}, {0, .5, .5}},
-                      {{-.5, .5, 0}, {.5, 0, .5}}};
+               std::vector<Vertex> vertices, VkCommandPool &commandPool,
+               VkQueue graphicsQueue) {
+    this->vertices = vertices;
     auto bufferSize = sizeof(this->vertices[0]) * this->vertices.size();
     this->create(
         device, physicalDevice, bufferSize,
@@ -31,8 +30,8 @@ private:
   void write(VkDevice device, PhysicalDevice physicalDevice,
              VkDeviceSize bufferSize, VkCommandPool &commandPool,
              VkQueue graphicsQueue) {
-    auto stagingBuffer = StagingBuffer(device, physicalDevice, bufferSize);
-    stagingBuffer.write(device, (size_t)bufferSize, this->vertices.data());
+    auto stagingBuffer = StagingBuffer(device, physicalDevice, bufferSize,
+                                       this->vertices.data());
     stagingBuffer.copyTo(device, commandPool, this->vkBuffer, bufferSize,
                          graphicsQueue);
     stagingBuffer.kill(device);
