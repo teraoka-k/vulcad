@@ -1,26 +1,41 @@
 #if !defined(TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER)
 #define TUTORIAL_VULKAN_COMMAND_COMMAND_BUFFER
 
+#include "../buffer/framebuffer.cc"
 #include "../buffer/indexBuffer.cc"
+#include "../buffer/uniformBuffer.cc"
 #include "../buffer/vertexBuffer.cc"
-#include "../physicalDevice.cc"
+#include "../descriptor/descriptorPool.cc"
+#include "../descriptor/descriptorSet.cc"
+#include "../device/physicalDevice.cc"
+#include "../pipeline/pipeline.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 class CommandBuffer {
+  Framebuffer framebuffer;
   IndexBuffer indexBuffer;
+  DescryptorPool descriptorPool;
   VertexBuffer vertexBuffer;
 
 public:
   std::vector<VkCommandBuffer> commandBuffers;
 
   CommandBuffer() {}
-  CommandBuffer(std::vector<VkFramebuffer> swapChainFramebuffers,
-                VkCommandPool commandPool, VkDevice device,
-                VkExtent2D swapChainExtent, VkRenderPass renderPass,
-                VkPipeline pipeline, PhysicalDevice physicalDevice,
-                VkQueue graphicsQueue) {
+  CommandBuffer(VkCommandPool commandPool, VkDevice device, VkExtent2D extent,
+                Pipeline pipeline, PhysicalDevice physicalDevice,
+                VkQueue graphicsQueue, std::vector<VkImageView> imageViews,
+                std::vector<UniformBuffer> uniformBuffers) {
+    auto countImage = imageViews.size();
+    this->framebuffer = Framebuffer(
+        imageViews, pipeline.renderPass.vkRenderPass, extent, device);
+    this->descriptorPool = DescryptorPool(device, countImage);
+    auto descriptorSet =
+        DescriptorSet(device, this->descriptorPool.vkDescriptorPool,
+                      pipeline.layout.descriptorSetLayout.vkDescriptorSetLayout,
+                      countImage, uniformBuffers);
+
     this->vertexBuffer = VertexBuffer(device, physicalDevice,
                                       {{{-.5, -.5, 0}, {1, 0, 0}},
                                        {{.5, -.5, 0}, {0, 1, 0}},
@@ -30,26 +45,27 @@ public:
     this->indexBuffer = IndexBuffer(device, physicalDevice, {0, 1, 2, 2, 3, 0},
                                     commandPool, graphicsQueue);
 
-    this->commandBuffers.resize(swapChainFramebuffers.size());
+    this->commandBuffers.resize(countImage);
     auto allocateInfo = this->getAllocateInfo(commandPool);
     if (vkAllocateCommandBuffers(device, &allocateInfo,
                                  this->commandBuffers.data()) != VK_SUCCESS)
       throw std::runtime_error("failed to allocate command buffers!");
-    this->record(swapChainExtent, renderPass, swapChainFramebuffers, pipeline,
-                 device, physicalDevice, commandPool, graphicsQueue);
+    this->record(extent, pipeline, device, physicalDevice, commandPool,
+                 graphicsQueue, descriptorSet.vkDescriptorSets);
   }
 
   void free(VkDevice device, VkCommandPool commandPool) {
     vkFreeCommandBuffers(device, commandPool,
                          static_cast<uint32_t>(this->commandBuffers.size()),
                          this->commandBuffers.data());
-    this->indexBuffer.kill(device);
-    this->vertexBuffer.kill(device);
+    this->kill(device);
   }
 
   void kill(VkDevice device) {
     this->indexBuffer.kill(device);
     this->vertexBuffer.kill(device);
+    this->framebuffer.kill(device);
+    this->descriptorPool.kill(device);
   }
 
 private:
@@ -62,11 +78,10 @@ private:
     };
   }
 
-  void record(VkExtent2D swapChainExtent, VkRenderPass renderPass,
-              std::vector<VkFramebuffer> swapChainFramebuffers,
-              VkPipeline pipeline, VkDevice device,
+  void record(VkExtent2D extent, Pipeline pipeline, VkDevice device,
               PhysicalDevice physicalDevice, VkCommandPool &commandPool,
-              VkQueue graphicsQueue) {
+              VkQueue graphicsQueue,
+              std::vector<VkDescriptorSet> descriptorSets) {
     VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
@@ -76,29 +91,29 @@ private:
       if (vkBeginCommandBuffer(this->commandBuffers[i], &beginInfo) !=
           VK_SUCCESS)
         throw std::runtime_error("failed to begin recording command buffer!");
-      this->recordRenderPass(swapChainExtent, renderPass,
-                             swapChainFramebuffers[i], &this->commandBuffers[i],
-                             pipeline, device, physicalDevice, commandPool,
-                             graphicsQueue);
+      this->recordRenderPass(extent, this->framebuffer.vkFramebuffers[i],
+                             &this->commandBuffers[i], pipeline, device,
+                             physicalDevice, commandPool, graphicsQueue,
+                             &descriptorSets[i]);
       if (vkEndCommandBuffer(this->commandBuffers[i]) != VK_SUCCESS)
         throw std::runtime_error("failed to record command buffer!");
     }
   }
 
-  void recordRenderPass(VkExtent2D swapChainExtent, VkRenderPass renderPass,
-                        VkFramebuffer swapChainFramebuffer,
-                        VkCommandBuffer *commandBuffer, VkPipeline pipeline,
+  void recordRenderPass(VkExtent2D extent, VkFramebuffer framebuffer,
+                        VkCommandBuffer *commandBuffer, Pipeline pipeline,
                         VkDevice device, PhysicalDevice physicalDevice,
-                        VkCommandPool &commandPool, VkQueue graphicsQueue) {
+                        VkCommandPool &commandPool, VkQueue graphicsQueue,
+                        VkDescriptorSet *descriptorSet) {
     VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
     VkRenderPassBeginInfo renderPassInfo = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = renderPass,
-        .framebuffer = swapChainFramebuffer,
+        .renderPass = pipeline.renderPass.vkRenderPass,
+        .framebuffer = framebuffer,
         .renderArea =
             {
                 .offset = {0, 0},
-                .extent = swapChainExtent,
+                .extent = extent,
             },
         .clearValueCount = 1,
         .pClearValues = &clearColor,
@@ -106,12 +121,15 @@ private:
     vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      pipeline);
+                      pipeline.vkPipeline);
     VkDeviceSize offsets = 0;
     vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &this->vertexBuffer.vkBuffer,
                            &offsets);
     vkCmdBindIndexBuffer(*commandBuffer, this->indexBuffer.vkBuffer, 0,
                          VK_INDEX_TYPE_UINT16);
+    vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            pipeline.layout.vkPipelineLayout, 0, 1,
+                            descriptorSet, 0, nullptr);
     vkCmdDrawIndexed(*commandBuffer, indexBuffer.indices.size(), 1, 0, 0, 0);
     vkCmdEndRenderPass(*commandBuffer);
   }

@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_SWAP_CHAIN)
 #define TUTORIAL_VULKAN_SWAP_CHAIN
 
-#include "queueFamily.cc"
+#include "../device/queue.cc"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <vector>

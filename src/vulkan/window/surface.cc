@@ -4,12 +4,12 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 
-class WindowSurface {
+class Surface {
 
 public:
   VkSurfaceKHR vkSurface;
 
-  WindowSurface(VkInstance instance, GLFWwindow *glfwWindow) {
+  Surface(VkInstance instance, GLFWwindow *glfwWindow) {
     if (glfwCreateWindowSurface(instance, glfwWindow, nullptr,
                                 &this->vkSurface) != VK_SUCCESS)
       throw std::runtime_error("failed to create window surface!");

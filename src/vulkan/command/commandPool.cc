@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_COMMAND_COMMAND_POOL)
 #define TUTORIAL_VULKAN_COMMAND_COMMAND_POOL
 
-#include "../queueFamily.cc"
+#include "../device/queue.cc"
 #include <vulkan/vulkan.h>
 
 class CommandPool {

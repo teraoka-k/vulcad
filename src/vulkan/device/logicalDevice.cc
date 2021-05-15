@@ -1,8 +1,9 @@
 #if !defined(TUTORIAL_VULKAN_LOGICAL_DEVICE)
 #define TUTORIAL_VULKAN_LOGICAL_DEVICE
 
+#include "../window/swapChain.cc"
 #include "physicalDevice.cc"
-#include "swapChain.cc"
+#include "queue.cc"
 #include <set>
 #include <vector>
 #include <vulkan/vulkan.h>

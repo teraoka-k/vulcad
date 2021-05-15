@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_BUFFER_STAGING_BUFFER)
 #define TUTORIAL_VULKAN_BUFFER_STAGING_BUFFER
 
-#include "../physicalDevice.cc"
+#include "../device/physicalDevice.cc"
 #include "buffer.cc"
 #include <vulkan/vulkan.h>
 

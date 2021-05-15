@@ -1,8 +1,8 @@
 #if !defined(TUTORIAL_VULKAN_PHYSICAL_DEVICE)
 #define TUTORIAL_VULKAN_PHYSICAL_DEVICE
 
-#include "queueFamily.cc"
-#include "swapChain.cc"
+#include "../window/swapChain.cc"
+#include "queue.cc"
 #include <set>
 #include <stdexcept>
 #include <vector>

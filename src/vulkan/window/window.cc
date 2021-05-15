@@ -1,9 +1,9 @@
 #if !defined(TUTORIAL_WINDOW_WINDOW)
 #define TUTORIAL_WINDOW_WINDOW
 
-#include "../vulkan/deviceQueue.cc"
-#include "../vulkan/renderer.cc"
-#include "../vulkan/semaphoreAndFence.cc"
+#include "../device/queue.cc"
+#include "../render/render.cc"
+#include "../semaphoreAndFence.cc"
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <vulkan/vulkan.h>

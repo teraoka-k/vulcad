@@ -1,11 +1,22 @@
 #if !defined(TUTORIAL_VULKAN_DEVICE_QUEUE)
 #define TUTORIAL_VULKAN_DEVICE_QUEUE
 
-#include "physicalDevice.cc"
+#include <optional>
+#include <stdint.h>
 #include <tuple>
 #include <vulkan/vulkan.h>
 
-class DeviceQueue {
+struct QueueFamilyIndices {
+  std::optional<uint32_t> graphicsFamilyIndex;
+  std::optional<uint32_t> surfaceFamilyIndex;
+
+  bool isComplete() {
+    return this->graphicsFamilyIndex.has_value() &&
+           this->surfaceFamilyIndex.has_value();
+  }
+};
+
+class Queue {
 public:
   /**
    * @return [graphicsQueue, presentQueue]

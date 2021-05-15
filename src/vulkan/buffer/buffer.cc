@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_BUFFER_BUFFER)
 #define TUTORIAL_VULKAN_BUFFER_BUFFER
 
-#include "../physicalDevice.cc"
+#include "../device/physicalDevice.cc"
 #include "vertex.cc"
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -73,7 +73,7 @@ protected:
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     };
     if (vkCreateBuffer(device, &createInfo, nullptr, &buffer) != VK_SUCCESS)
-      throw std::runtime_error("failed to create vertex buffer!");
+      throw std::runtime_error("failed to create buffer!");
 
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, buffer, &memRequirements);

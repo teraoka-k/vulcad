@@ -1,7 +1,7 @@
 #if !defined(TUTORIAL_VULKAN_BUFFER_INDEX_BUFFER)
 #define TUTORIAL_VULKAN_BUFFER_INDEX_BUFFER
 
-#include "../physicalDevice.cc"
+#include "../device/physicalDevice.cc"
 #include "buffer.cc"
 #include "stagingBuffer.cc"
 #include <vector>

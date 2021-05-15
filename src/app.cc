@@ -4,11 +4,11 @@
 #include <vulkan/vulkan.h>
 
 #include "vulkan/debugMessenger.cc"
+#include "vulkan/device/logicalDevice.cc"
+#include "vulkan/device/physicalDevice.cc"
 #include "vulkan/instance.cc"
-#include "vulkan/logicalDevice.cc"
-#include "vulkan/physicalDevice.cc"
-#include "vulkan/windowSurface.cc"
-#include "window/window.cc"
+#include "vulkan/window/surface.cc"
+#include "vulkan/window/window.cc"
 
 class App {
 
@@ -18,15 +18,15 @@ public:
     auto window = Window(800, 600);
     auto instance = Instance();
     auto vkInstance = instance.vkInstance;
-    auto windowSurface = WindowSurface(vkInstance, window.glfwWindow);
+    auto surface = Surface(vkInstance, window.glfwWindow);
     auto debugMessenger =
         enablesValidationLayer ? DebugMessenger(vkInstance) : NULL;
-    auto physicalDevice = PhysicalDevice(vkInstance, windowSurface.vkSurface);
+    auto physicalDevice = PhysicalDevice(vkInstance, surface.vkSurface);
     auto logicalDevice = LogicalDevice(physicalDevice);
     auto vkDevice = logicalDevice.vkDevice;
 
     // main loop
-    window.render(vkDevice, physicalDevice, windowSurface.vkSurface,
+    window.render(vkDevice, physicalDevice, surface.vkSurface,
                   window.glfwWindow);
 
     // release memory before exit
@@ -34,7 +34,7 @@ public:
     if (enablesValidationLayer)
       debugMessenger.kill(vkInstance);
     window.kill();
-    windowSurface.kill(vkInstance);
+    surface.kill(vkInstance);
     instance.kill();
   }
 };

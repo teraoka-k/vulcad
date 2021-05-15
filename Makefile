@@ -15,4 +15,4 @@ sh:
 	glslc ${SHADER_DIR}shader.frag -o ${SHADER_DIR}frag.spv
 
 run: build
-	$(EXE_NAME)
+	clear && $(EXE_NAME)

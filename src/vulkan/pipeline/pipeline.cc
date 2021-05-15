@@ -15,10 +15,10 @@
 #include <vulkan/vulkan.h>
 
 class Pipeline {
-  PipelineLayout layout;
   ShaderStage shaderStage;
 
 public:
+  PipelineLayout layout;
   RenderPass renderPass;
   VkPipeline vkPipeline;
 

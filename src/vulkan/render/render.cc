@@ -1,14 +1,14 @@
 #if !defined(TUTORIAL_VULKAN_RENDERER)
 #define TUTORIAL_VULKAN_RENDERER
 
-#include "command/commandBuffer.cc"
-#include "command/commandPool.cc"
-#include "framebuffer.cc"
-#include "imageView.cc"
-#include "physicalDevice.cc"
-#include "pipeline/pipeline.cc"
-#include "semaphoreAndFence.cc"
-#include "swapChain.cc"
+#include "../buffer/uniformBuffer.cc"
+#include "../command/commandBuffer.cc"
+#include "../command/commandPool.cc"
+#include "../device/physicalDevice.cc"
+#include "../pipeline/pipeline.cc"
+#include "../semaphoreAndFence.cc"
+#include "../window/imageView.cc"
+#include "../window/swapChain.cc"
 #include <stdexcept>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -16,7 +16,6 @@
 class Renderer {
   CommandBuffer commandBuffer;
   CommandPool commandPool;
-  Framebuffer framebuffer;
   size_t frameIndex = 0;
   ImageView imageView;
   Pipeline pipeline;
@@ -24,18 +23,19 @@ class Renderer {
   SwapChain swapChain;
   VkQueue graphicsQueue;
   VkQueue presentQueue;
+  std::vector<UniformBuffer> uniformBuffers;
 
 public:
   Renderer(VkDevice device, PhysicalDevice physicalDevice, VkSurfaceKHR surface,
            GLFWwindow *window) {
     auto [graphicsQueue, presentQueue] =
-        DeviceQueue::get(device, physicalDevice.queueFamilyIndices);
+        Queue::get(device, physicalDevice.queueFamilyIndices);
     this->graphicsQueue = graphicsQueue;
     this->presentQueue = presentQueue;
     this->commandPool = CommandPool(physicalDevice.queueFamilyIndices, device);
     this->createSwapChain(device, physicalDevice, surface, window);
-    this->semaphoreAndFence =
-        SemaphoreAndFence(device, this->imageView.swapChainImageViews.size());
+    auto imageCount = this->imageView.swapChainImageViews.size();
+    this->semaphoreAndFence = SemaphoreAndFence(device, imageCount);
   }
 
   /**
@@ -57,6 +57,8 @@ public:
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
+    this->uniformBuffers[frameIndex].writeMVP(device, this->swapChain.extent);
+
     vkResetFences(device, 1, &imageState.isInUse);
     this->queueSubmit(imageState,
                       &this->commandBuffer.commandBuffers[imageIndex]);
@@ -71,11 +73,15 @@ public:
     this->frameIndex = (this->frameIndex + 1) % semaphoreAndFence.images.size();
   }
 
-  void kill(VkDevice device) {
-    this->semaphoreAndFence.kill(device);
-    this->commandBuffer.kill(device);
-    this->commandPool.kill(device);
-    this->framebuffer.kill(device);
+  void kill(VkDevice device, bool killsCommandPool = true) {
+    if (killsCommandPool) {
+      this->semaphoreAndFence.kill(device);
+      this->commandBuffer.kill(device);
+      this->commandPool.kill(device);
+    } else
+      this->commandBuffer.free(device, this->commandPool.vkCommandPool);
+    for (auto &uniformBuffer : this->uniformBuffers)
+      uniformBuffer.kill(device);
     this->pipeline.kill(device);
     this->imageView.kill(device);
     this->swapChain.kill(device);
@@ -84,11 +90,7 @@ public:
   void recreateSwapChain(VkDevice device, PhysicalDevice physicalDevice,
                          VkSurfaceKHR surface, GLFWwindow *window) {
     vkDeviceWaitIdle(device);
-    this->commandBuffer.free(device, this->commandPool.vkCommandPool);
-    this->framebuffer.kill(device);
-    this->pipeline.kill(device);
-    this->imageView.kill(device);
-    this->swapChain.kill(device);
+    this->kill(device, false);
     this->createSwapChain(device, physicalDevice, surface, window);
   }
 
@@ -101,14 +103,14 @@ private:
     this->imageView = ImageView(device, this->swapChain);
     this->pipeline =
         Pipeline(device, this->swapChain.format, this->swapChain.extent);
-    this->framebuffer = Framebuffer(this->imageView.swapChainImageViews,
-                                    this->pipeline.renderPass.vkRenderPass,
-                                    this->swapChain.extent, device);
+    auto imageCount = this->imageView.swapChainImageViews.size();
+    this->uniformBuffers.resize(imageCount);
+    for (int i = 0; i < imageCount; i++)
+      this->uniformBuffers[i] = UniformBuffer(device, physicalDevice);
     this->commandBuffer = CommandBuffer(
-        this->framebuffer.swapChainFramebuffers,
         this->commandPool.vkCommandPool, device, this->swapChain.extent,
-        this->pipeline.renderPass.vkRenderPass, this->pipeline.vkPipeline,
-        physicalDevice, this->graphicsQueue);
+        this->pipeline, physicalDevice, this->graphicsQueue,
+        this->imageView.swapChainImageViews, this->uniformBuffers);
   }
 
   VkResult queuePresent(VkSwapchainKHR *swapChain, VkSemaphore *pWaitSemaphore,
