@@ -1,6 +1,7 @@
 #if !defined(VULCAD_CORE_WINDOW_WINDOW)
 #define VULCAD_CORE_WINDOW_WINDOW
 
+#include "../../../vulcad.h"
 #include "../device/queue.cc"
 #include "../render/render.cc"
 #include "../semaphoreAndFence.cc"
@@ -26,7 +27,8 @@ public:
 
   void render(VkDevice device, PhysicalDevice physicalDevice,
               VkSurfaceKHR surface, GLFWwindow *window,
-              std::vector<Vertex> vertices, std::vector<uint16_t> indices) {
+              std::vector<vulcad::Vertex> vertices,
+              std::vector<uint16_t> indices) {
     auto renderer =
         Renderer(device, physicalDevice, surface, window, vertices, indices);
     while (!glfwWindowShouldClose(this->glfwWindow)) {

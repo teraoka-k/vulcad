@@ -1,6 +1,7 @@
 #if !defined(VULCAD_CORE_VULKAN_COMMAND_COMMAND_BUFFER)
 #define VULCAD_CORE_VULKAN_COMMAND_COMMAND_BUFFER
 
+#include "../../../vulcad.h"
 #include "../buffer/framebuffer.cc"
 #include "../buffer/indexBuffer.cc"
 #include "../buffer/uniformBuffer.cc"
@@ -27,7 +28,8 @@ public:
                 Pipeline pipeline, PhysicalDevice physicalDevice,
                 VkQueue graphicsQueue, std::vector<VkImageView> imageViews,
                 std::vector<UniformBuffer> uniformBuffers,
-                std::vector<Vertex> vertices, std::vector<uint16_t> indices) {
+                std::vector<vulcad::Vertex> vertices,
+                std::vector<uint16_t> indices) {
     auto countImage = imageViews.size();
     this->framebuffer = Framebuffer(
         imageViews, pipeline.renderPass.vkRenderPass, extent, device);

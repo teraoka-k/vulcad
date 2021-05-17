@@ -1,7 +1,7 @@
 #if !defined(VULCAD_CORE_VULKAN_PIPELINE_FIXED_FUNCTIONS_VERTEX_INPUT)
 #define VULCAD_CORE_VULKAN_PIPELINE_FIXED_FUNCTIONS_VERTEX_INPUT
 
-#include "../../buffer/vertex.cc"
+#include "../../../../vulcad.h"
 #include <array>
 #include <vulkan/vulkan.h>
 
@@ -12,8 +12,9 @@ class VertexInput {
 
 public:
   static VkPipelineVertexInputStateCreateInfo getCreateInfo() {
-    VertexInput::attributeDescriptions = Vertex::getAttributeDescriptions();
-    VertexInput::bindingDescription = Vertex::getBindingDescription();
+    VertexInput::attributeDescriptions =
+        vulcad::Vertex::getAttributeDescriptions();
+    VertexInput::bindingDescription = vulcad::Vertex::getBindingDescription();
     return {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .vertexBindingDescriptionCount = 1,

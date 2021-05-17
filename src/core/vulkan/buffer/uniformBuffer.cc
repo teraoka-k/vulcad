@@ -29,7 +29,7 @@ public:
                     currentTime - startTime)
                     .count();
 
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), time * glm::radians(00.0f),
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), 1 * glm::radians(90.0f),
                                   glm::vec3(0.0f, 0.0f, 1.0f));
     glm::mat4 view =
         glm::lookAt(glm::vec3(.001f, .0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),

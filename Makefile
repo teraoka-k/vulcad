@@ -1,4 +1,4 @@
-CFLAGS = -std=c++2a -O2
+CFLAGS = -std=c++2a -O0
 DIR_SHADER = ./shaders/
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 

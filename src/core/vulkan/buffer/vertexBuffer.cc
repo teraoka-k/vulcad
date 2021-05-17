@@ -1,21 +1,21 @@
 #if !defined(VULCAD_CORE_VULKAN_BUFFER_VERTEX_BUFFER)
 #define VULCAD_CORE_VULKAN_BUFFER_VERTEX_BUFFER
 
+#include "../../../vulcad.h"
 #include "../device/physicalDevice.cc"
 #include "buffer.cc"
 #include "stagingBuffer.cc"
-#include "vertex.cc"
 #include <vector>
 #include <vulkan/vulkan.h>
 
 class VertexBuffer : public Buffer {
 
 public:
-  std::vector<Vertex> vertices;
+  std::vector<vulcad::Vertex> vertices;
 
   VertexBuffer() {}
   VertexBuffer(VkDevice device, PhysicalDevice physicalDevice,
-               std::vector<Vertex> vertices, VkCommandPool &commandPool,
+               std::vector<vulcad::Vertex> vertices, VkCommandPool &commandPool,
                VkQueue graphicsQueue) {
     this->vertices = vertices;
     auto bufferSize = sizeof(this->vertices[0]) * this->vertices.size();

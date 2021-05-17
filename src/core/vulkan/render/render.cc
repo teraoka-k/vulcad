@@ -1,6 +1,7 @@
 #if !defined(VULCAD_CORE_VULKAN_RENDERER)
 #define VULCAD_CORE_VULKAN_RENDERER
 
+#include "../../../vulcad.h"
 #include "../buffer/uniformBuffer.cc"
 #include "../command/commandBuffer.cc"
 #include "../command/commandPool.cc"
@@ -24,12 +25,12 @@ class Renderer {
   VkQueue graphicsQueue;
   VkQueue presentQueue;
   std::vector<UniformBuffer> uniformBuffers;
-  std::vector<Vertex> vertices;
+  std::vector<vulcad::Vertex> vertices;
   std::vector<uint16_t> indices;
 
 public:
   Renderer(VkDevice device, PhysicalDevice physicalDevice, VkSurfaceKHR surface,
-           GLFWwindow *window, std::vector<Vertex> vertices,
+           GLFWwindow *window, std::vector<vulcad::Vertex> vertices,
            std::vector<uint16_t> indices) {
     this->vertices = vertices;
     this->indices = indices;

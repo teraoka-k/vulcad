@@ -2,7 +2,6 @@
 #define VULCAD_CORE_VULKAN_BUFFER_BUFFER
 
 #include "../device/physicalDevice.cc"
-#include "vertex.cc"
 #include <vector>
 #include <vulkan/vulkan.h>
 
