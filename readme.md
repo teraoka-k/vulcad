@@ -2,6 +2,8 @@
 
 2D CAD for pattern making written in c++ with vulkan
 
+![drawings](image/drawing.png)
+
 ## Progress and Goals
 
 in order of priority
