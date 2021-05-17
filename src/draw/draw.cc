@@ -38,23 +38,23 @@ public:
     }
   }
 
-  void circle(Vec c, float r, uint16_t precision = 100) {
+  void circle(Vec c, float r, Vec rgb = {1, 1, 1}, uint16_t precision = 100) {
     auto theta = .0f;
     const auto dTheta = 2 * M_PI / (float)precision;
     for (int i = 0; i < precision; i++) {
       auto thetaNew = theta + dTheta;
       auto origin = c + r * Vec(cos(theta), sin(theta));
       auto end = c + r * Vec(cos(thetaNew), sin(thetaNew));
-      this->line(origin, end);
+      this->line(origin, end, rgb);
       theta = thetaNew;
     }
   }
 
-  void line(Vec origin, Vec end) {
+  void line(Vec origin, Vec end, Vec rgb = {1, 1, 1}) {
     this->indices.push_back(this->vertices.size());
     this->vertices.push_back({{origin.x, origin.y, 0}, {1, 1, 1}});
     this->indices.push_back(this->vertices.size());
-    this->vertices.push_back({{end.x, end.y, 0}, {1, 1, 1}});
+    this->vertices.push_back({{end.x, end.y, 0}, {rgb.x, rgb.y, rgb.z}});
   }
 
   void show() { vulcad::show(this->vertices, this->indices); };
