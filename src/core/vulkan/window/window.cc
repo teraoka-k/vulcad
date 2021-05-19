@@ -17,7 +17,7 @@ public:
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     this->glfwWindow =
-        glfwCreateWindow(width, height, "Vulkan", nullptr, nullptr);
+        glfwCreateWindow(width, height, "VULCAD", nullptr, nullptr);
   }
 
   void kill() {
