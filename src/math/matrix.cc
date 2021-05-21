@@ -43,7 +43,7 @@ public:
     Mat mat = this->copy();
     // use gaussian elimination to calculate inverse matrix
     for (int j = 1; j <= CountColumns; j++) {
-      for (int i = 1; i <= CountRows; i++) {
+      for (int i = j; i <= CountRows; i++) {
         auto element = mat._(i, j);
         if (element != 0) {
           if (i != j) {
@@ -51,8 +51,8 @@ public:
             inverseMat.swapRow(i, j);
           }
           if (element != 1) {
-            mat.multiplyRow(j, 1.f / element);
-            inverseMat.multiplyRow(j, 1.f / element);
+            mat.multiplyRow(i, 1.f / element);
+            inverseMat.multiplyRow(i, 1.f / element);
           }
           break;
         }
@@ -60,9 +60,12 @@ public:
           throw "this matrix is not invertible";
       }
       for (int i = 1; i <= CountRows; i++)
-        if (i != j) [[unlikely]] {
-          mat.subtractRow(i, j, mat._(i, j));
-          inverseMat.subtractRow(i, j, mat._(i, j));
+        [[likely]] if (i != j) {
+          auto element = mat._(i, j);
+          if (element != 0) {
+            mat.subtractRow(i, j, element);
+            inverseMat.subtractRow(i, j, element);
+          }
         }
     }
 
