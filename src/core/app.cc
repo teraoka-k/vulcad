@@ -21,7 +21,7 @@ public:
                                               {{-.5, .5, 0}, {1, 1, 1}}},
       std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0}) {
     // setup
-    auto window = Window(800, 600);
+    auto window = Window(1600, 1200);
     auto instance = Instance();
     auto vkInstance = instance.vkInstance;
     auto surface = Surface(vkInstance, window.glfwWindow);
