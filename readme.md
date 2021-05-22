@@ -13,7 +13,7 @@ in order of priority
 - [x] draw lines
 - [x] draw circles
 - [] export as dxf
-- [] draw spline
+- [x] draw spline
 - [x] draw bezier curves
 - [] create base pattern
 - [] create black shirts
