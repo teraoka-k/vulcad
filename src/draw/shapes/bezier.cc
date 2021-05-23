@@ -21,6 +21,10 @@ public:
         this->control.push_back(point);
     }
   }
+
+  bool isCubic() { return this->control.size() == 2; }
+
+  bool isQuodratic() { return this->control.size() == 1; }
 };
 
 #endif // VULCAD_DRAW_SHAPES_BEZIER

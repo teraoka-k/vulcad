@@ -43,8 +43,7 @@ private:
     auto control = bezier.control;
     auto end = bezier.end;
 
-    switch (control.size()) {
-    case 1: {
+    if (bezier.isQuodratic()) {
       auto p2 = origin;
       for (float t = 0.f; t <= 1.f; t += dt) {
         auto p0 = (1 - t) * origin + t * control[0];
@@ -53,9 +52,7 @@ private:
         this->drawLine(Line(p2, p2New), rgb);
         p2 = p2New;
       }
-      break;
-    }
-    case 2: {
+    } else if (bezier.isCubic()) {
       auto p5 = origin;
       for (float t = 0.f; t <= 1.f; t += dt) {
         auto p0 = (1 - t) * origin + t * control[0];
@@ -67,8 +64,6 @@ private:
         this->drawLine(Line(p5, p5New), rgb);
         p5 = p5New;
       }
-      break;
-    }
     }
   }
 

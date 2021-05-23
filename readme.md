@@ -12,7 +12,7 @@ in order of priority
 - [] change units in centimeter
 - [x] draw lines
 - [x] draw circles
-- [] export as dxf
+- [x] export as dxf ([samples](dxf))
 - [x] draw spline
 - [x] draw bezier curves
 - [] create base pattern
@@ -26,9 +26,3 @@ in order of priority
 ## Disclaimer
 
 - No user interface
-
-## Help
-
-tell me some good open soruce CAD with which you can define variables to make your drawings dynamic like AutoCAD and SOLIDWORKS, then I'll stop reinventing 2D CAD.
-
-FreeCAD with some addons may work.

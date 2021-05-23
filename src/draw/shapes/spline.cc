@@ -31,8 +31,11 @@ class Spline {
 public:
   /** spline is set of cubic curves that are connected smoothly*/
   std::vector<cubicCurve> curves;
+  std::vector<Point> points;
 
   Spline(std::vector<Point> points) {
+    // store points only to export as dxf file
+    this->points = points;
     this->curves.resize(points.size() - 1);
     this->calculateCoefficients(points);
   }

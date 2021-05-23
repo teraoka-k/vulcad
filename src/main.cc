@@ -1,5 +1,5 @@
 #include "draw/drawer.cc"
-#include "draw/dxf.cc"
+#include "draw/dxf/dxf.cc"
 #include "draw/shapes/bezier.cc"
 #include "draw/shapes/point.cc"
 #include "draw/shapes/spline.cc"
@@ -36,8 +36,10 @@ int main() {
 
     drawer.show();
 
+    Dxf::write("line", l1);
+    Dxf::write("circle", c1);
+    Dxf::write("point", p1);
     Dxf::write("spline", spline);
-    Dxf::write("vec", p1);
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
