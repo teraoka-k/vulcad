@@ -1,8 +1,8 @@
 #if !defined(VULCAD_DRAW_SPLINE)
 #define VULCAD_DRAW_SPLINE
 
-#include "../math/matrix.cc"
-#include "vec.cc"
+#include "../../math/matrix.cc"
+#include "point.cc"
 #include <cmath>
 #include <tuple>
 #include <vector>
@@ -20,7 +20,7 @@ struct cubicCurve {
   /** coefficient of x^0*/
   float x0;
 
-  Vec getPointAt(float x) {
+  Point getPointAt(float x) {
     return {x, x3 * x * x * x + x2 * x * x + x1 * x + x0};
   }
 };
@@ -32,7 +32,7 @@ public:
   /** spline is set of cubic curves that are connected smoothly*/
   std::vector<cubicCurve> curves;
 
-  Spline(std::vector<Vec> points) {
+  Spline(std::vector<Point> points) {
     this->curves.resize(points.size() - 1);
     this->calculateCoefficients(points);
   }
@@ -49,7 +49,7 @@ private:
      to that of the next curve at the k+1th point
       5. [[only at the first or last curve]] derivative of derivative of curve
      is 0 at the first or last point */
-  void calculateCoefficients(std::vector<Vec> points) {
+  void calculateCoefficients(std::vector<Point> points) {
     auto countCurves = this->curves.size();
     /** 4 coefficients (a, b, c, d) for each curve (ax^3 + bx^2 + cx + d) */
     auto countCoefficients = 4 * countCurves;
@@ -69,7 +69,7 @@ private:
      * if a curve passes through a point, then ax^3 + bx^2 + cx + d = y
      */
     auto curvePassThroughPoint =
-        [&constraintIndex, &A, &y](Vec &point, int coefficientIndex) -> void {
+        [&constraintIndex, &A, &y](Point &point, int coefficientIndex) -> void {
       A._(constraintIndex, coefficientIndex) = point.x * point.x * point.x;
       A._(constraintIndex, coefficientIndex + 1) = point.x * point.x;
       A._(constraintIndex, coefficientIndex + 2) = point.x;
@@ -82,7 +82,7 @@ private:
      * at the edge points, derivative of derivative 6ax + 2b = 0
      */
     auto curvatureIsZero = [&constraintIndex, &A,
-                            &y](Vec &point, int coefficientIndex) -> void {
+                            &y](Point &point, int coefficientIndex) -> void {
       A._(constraintIndex, coefficientIndex) = 6 * point.x;
       A._(constraintIndex, coefficientIndex + 1) = 2;
       y._(constraintIndex, 1) = 0;

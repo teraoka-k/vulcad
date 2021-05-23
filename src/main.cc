@@ -1,5 +1,8 @@
-#include "draw/draw.cc"
-#include "draw/spline.cc"
+#include "draw/drawer.cc"
+#include "draw/dxf.cc"
+#include "draw/shapes/bezier.cc"
+#include "draw/shapes/point.cc"
+#include "draw/shapes/spline.cc"
 #include "math/matrix.cc"
 #include "vulcad.h"
 #include <iostream>
@@ -7,26 +10,34 @@
 
 int main() {
   try {
-    auto draw = Draw();
-    draw.line({}, {.5, .5}, {1, 0, 0});
-    draw.line({}, {0, .5}, {0, 1, 0});
-    draw.line({}, {1, 0}, {0, 0, 1});
-    draw.circle({}, .7, {.5, .5, 0}, 10);
-    draw.circle({}, .5, {0, .5, .5}, 1000);
-    draw.circle({}, .2, {.5, 0, .5}, 1200);
-    draw.circle({}, .1, {.2, .4, .8});
-    draw.bezier({-.37, 0}, {-.54, .6}, {-.7, -.7}, {-.88, .2});
-    Vec O = {.0001, .0001};
-    Vec p1 = {-.2, -.3};
-    Vec p2 = {-.1, .2};
-    Vec p3 = {.1, .3};
-    Vec p4 = {.4, .2};
-    Vec p5 = {.7, .6};
+    Line l1({}, {.5, .5}), l2({}, {1, 0});
+
+    auto drawer = Drawer();
+    drawer.draw(l1, {0, 1, 5});
+    drawer.draw(l2, {1, 5, 1});
+
+    Circle c1({}, .7), c2({}, .5), c3({}, .2), c4({}, .1);
+    drawer.draw(c1, {0, 10, 50}, 7);
+    drawer.draw(c2, {0, 5, 25}, 5);
+    drawer.draw(c3, {0, 1, 5}, 3);
+    drawer.draw(c4, {30, 50, 0});
+
+    Bezier b({{-.37, 0}, {-.54, .6}, {-.7, -.7}, {-.88, .2}});
+    drawer.draw(b, {0, 10, 50});
+
+    Point O = {.0001, .0001}, p1 = {-.2, -.3}, p2 = {-.1, .2}, p3 = {.1, .3},
+          p4 = {.4, .2}, p5 = {.7, .6};
     auto points = {p1, p2, O, p3, p4, p5};
     for (auto &p : points)
-      draw.circle(p, .01);
-    draw.spline(points, 100);
-    draw.show();
+      drawer.draw(p, {0, 10, 50});
+
+    Spline spline(points);
+    drawer.draw(spline, {16, 64, 255}, 100);
+
+    drawer.show();
+
+    Dxf::write("spline", spline);
+    Dxf::write("vec", p1);
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;

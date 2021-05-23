@@ -116,6 +116,15 @@ public:
     return mat;
   }
 
+  std::vector<float> operator*(std::vector<float> vec) {
+    std::vector<float> newVec(this->countRows);
+    for (int i = 0; i < newVec.size(); i++)
+      newVec[i] = sigma(
+          [i, &vec, this](int k) { return this->_(i + 1, k) * vec[k - 1]; }, 1,
+          this->countColumns);
+    return newVec;
+  }
+
   Mat operator*(Mat mat) {
     auto newMat = Mat(this->countRows, mat.countColumns);
     for (int i = 1; i <= newMat.countRows; i++)
