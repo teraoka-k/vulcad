@@ -1,4 +1,4 @@
-#include "draw/drawer.cc"
+#include "draw/drawing.cc"
 #include "draw/dxf/dxf.cc"
 #include "draw/shapes/bezier.cc"
 #include "draw/shapes/point.cc"
@@ -10,31 +10,43 @@
 
 int main() {
   try {
-    Line l1({}, {.5, .5}), l2({}, {1, 0});
+    Point O;
+    Line l1(O, {0, 75}), l2({75 * (1 - .1618), 0}, O);
 
-    auto drawer = Drawer();
-    drawer.draw(l1, {0, 1, 5});
-    drawer.draw(l2, {1, 5, 1});
+    const int maxX = 70;
+    const int maxY = 90;
+    Drawing drawing({.x = {.min = 0, .max = maxX},
+                     .y = {.min = 0, .max = maxY},
+                     .z = {.min = -1, .max = 1}},
+                    {.width = 900, .height = 900});
+    drawing.draw(l1, {0, 1, 5});
+    drawing.draw(l2, {1, 5, 1});
 
-    Circle c1({}, .7), c2({}, .5), c3({}, .2), c4({}, .1);
-    drawer.draw(c1, {0, 10, 50}, 7);
-    drawer.draw(c2, {0, 5, 25}, 5);
-    drawer.draw(c3, {0, 1, 5}, 3);
-    drawer.draw(c4, {30, 50, 0});
+    Point center(maxX / 2, maxY / 2);
+    Circle c1(center, 16.18),
+        c2(center + Point(16.18, 10), 16.18 * (1 - .1618)),
+        c3(center + 1.618 * Point(16.18, 10),
+           16.18 * (1 - .1618) * (1 - .1618)),
+        c4(center + 1.618 * 1.618 * Point(16.18, 10),
+           16.18 * (1 - .1618) * (1 - .1618) * (1 - .1618));
+    drawing.draw(c1, {0, 10, 50}, 7);
+    drawing.draw(c2, {0, 5, 25}, 5);
+    drawing.draw(c3, {0, 1, 5}, 3);
+    drawing.draw(c4, {30, 50, 0});
 
-    Bezier b({{-.37, 0}, {-.54, .6}, {-.7, -.7}, {-.88, .2}});
-    drawer.draw(b, {0, 10, 50});
+    Bezier b({{maxX, maxY}, center, center * 1.618, {0, maxY}});
+    drawing.draw(b, {0, 10, 50});
 
-    Point O = {.0001, .0001}, p1 = {-.2, -.3}, p2 = {-.1, .2}, p3 = {.1, .3},
-          p4 = {.4, .2}, p5 = {.7, .6};
-    auto points = {p1, p2, O, p3, p4, p5};
+    Point p1 = {12, 23}, p2 = {33, 34}, p3 = {45, 28}, p4 = {62, 23},
+          p5 = {77, 31}, p6 = {89, 23};
+    auto points = {O, p1, p2, p3, p4, p5, p6};
     for (auto &p : points)
-      drawer.draw(p, {0, 10, 50});
+      drawing.draw(p, {0, 10, 50});
 
     Spline spline(points);
-    drawer.draw(spline, {16, 64, 255}, 100);
+    drawing.draw(spline, {16, 64, 255}, 100);
 
-    drawer.show();
+    drawing.show();
 
     Dxf::write("line", l1);
     Dxf::write("circle", c1);

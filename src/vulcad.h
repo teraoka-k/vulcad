@@ -1,7 +1,7 @@
 #if !defined(VULCAD)
 #define VULCAD
 
-// #include "core/vulkan/buffer/vertex.cc"
+#include "types.cc"
 #include <array>
 #include <glm/glm.hpp>
 #include <vector>
@@ -38,8 +38,10 @@ struct Vertex {
  * @param indices specify points in order so that they forms triangles.
  * e.g. if there are 4 vertices (0, 1, 2, 3),
  * then pass {0, 1, 2, 2, 3, 0} to draw two triangles, {0, 1, 2} and {2, 3, 0}
+ * @param model model matrix of MVP matrix
  */
-void show(std::vector<Vertex> vertices, std::vector<uint16_t> indices);
+void show(std::vector<Vertex> vertices, std::vector<uint16_t> indices,
+          ScreenSize screenSize, glm::mat4 model);
 } // namespace vulcad
 
 #endif

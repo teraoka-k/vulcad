@@ -22,15 +22,7 @@ public:
                  this->vkBuffer, this->memory);
   }
 
-  void writeMVP(VkDevice device, VkExtent2D extent) {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    auto time = std::chrono::duration<float, std::chrono::seconds::period>(
-                    currentTime - startTime)
-                    .count();
-
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), 1 * glm::radians(90.0f),
-                                  glm::vec3(0.0f, 0.0f, 1.0f));
+  void writeMVP(VkDevice device, VkExtent2D extent, glm::mat4 model) {
     glm::mat4 view =
         glm::lookAt(glm::vec3(.001f, .0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
                     glm::vec3(0.0f, 0.0f, 1.0f));

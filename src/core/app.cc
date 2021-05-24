@@ -10,18 +10,23 @@
 #include "vulkan/instance.cc"
 #include "vulkan/window/surface.cc"
 #include "vulkan/window/window.cc"
+#include <glm/glm.hpp>
 
 class App {
 
 public:
-  static void
-  run(std::vector<vulcad::Vertex> vertices = {{{-.5, -.5, 0}, {1, 0, 0}},
-                                              {{.5, -.5, 0}, {0, 1, 0}},
-                                              {{.5, .5, 0}, {0, 0, 1}},
-                                              {{-.5, .5, 0}, {1, 1, 1}}},
-      std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0}) {
+  /**
+   * @param vertices
+   * @param indices specify 3 vertices for each triangle
+   * @param width of window
+   * @param height of window
+   * @param model for MVP matrix's M
+   */
+  static void run(std::vector<vulcad::Vertex> vertices,
+                  std::vector<uint16_t> indices, uint16_t width,
+                  uint16_t height, glm::mat4 model) {
     // setup
-    auto window = Window(1600, 1200);
+    auto window = Window(width, height);
     auto instance = Instance();
     auto vkInstance = instance.vkInstance;
     auto surface = Surface(vkInstance, window.glfwWindow);
@@ -33,7 +38,7 @@ public:
 
     // main loop
     window.render(vkDevice, physicalDevice, surface.vkSurface,
-                  window.glfwWindow, vertices, indices);
+                  window.glfwWindow, vertices, indices, model);
 
     // release memory before exit
     logicalDevice.kill();

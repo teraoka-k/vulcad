@@ -50,7 +50,7 @@ public:
    *  and return before GPU finishes commands
    */
   void drawFrame(VkDevice device, PhysicalDevice physicalDevice,
-                 VkSurfaceKHR surface, GLFWwindow *window) {
+                 VkSurfaceKHR surface, GLFWwindow *window, glm::mat4 model) {
     auto &imageState = this->semaphoreAndFence.images[this->frameIndex];
     vkWaitForFences(device, 1, &imageState.isInUse, VK_TRUE, UINT64_MAX);
     uint32_t imageIndex;
@@ -63,7 +63,7 @@ public:
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
       throw std::runtime_error("failed to acquire swap chain image!");
 
-    this->uniformBuffers[frameIndex].writeMVP(device, this->swapChain.extent);
+    this->uniformBuffers[frameIndex].writeMVP(device, this->swapChain.extent, model);
 
     vkResetFences(device, 1, &imageState.isInUse);
     this->queueSubmit(imageState,

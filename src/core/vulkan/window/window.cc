@@ -13,7 +13,7 @@ class Window {
 public:
   GLFWwindow *glfwWindow = NULL;
 
-  Window(uint32_t width = 800, uint32_t height = 400) {
+  Window(uint32_t width, uint32_t height) {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     this->glfwWindow =
@@ -28,12 +28,12 @@ public:
   void render(VkDevice device, PhysicalDevice physicalDevice,
               VkSurfaceKHR surface, GLFWwindow *window,
               std::vector<vulcad::Vertex> vertices,
-              std::vector<uint16_t> indices) {
+              std::vector<uint16_t> indices, glm::mat4 model) {
     auto renderer =
         Renderer(device, physicalDevice, surface, window, vertices, indices);
     while (!glfwWindowShouldClose(this->glfwWindow)) {
       glfwPollEvents();
-      renderer.drawFrame(device, physicalDevice, surface, window);
+      renderer.drawFrame(device, physicalDevice, surface, window, model);
     }
     vkDeviceWaitIdle(device);
     renderer.kill(device);
