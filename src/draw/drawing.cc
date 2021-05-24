@@ -1,21 +1,32 @@
-#if !defined(VULCAD_DRAW_DRAWER)
-#define VULCAD_DRAW_DRAWER
+#if !defined(VULCAD_DRAW_DRAWING)
+#define VULCAD_DRAW_DRAWING
 
+#include "../types.cc"
 #include "../vulcad.h"
 #include "shapes/bezier.cc"
 #include "shapes/circle.cc"
 #include "shapes/line.cc"
 #include "shapes/point.cc"
 #include "shapes/spline.cc"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <math.h>
 #include <variant>
 #include <vector>
 
-class Drawer {
+class Drawing {
   typedef Point RGB;
   inline static const RGB DEFAULT_COLOR = {255, 255, 255};
 
+  CoordinatesRange coordinatesRange;
+  ScreenSize screenSize;
+
 public:
+  Drawing(CoordinatesRange coordinatesRange, ScreenSize screenSize) {
+    this->coordinatesRange = coordinatesRange;
+    this->screenSize = screenSize;
+  }
+
   void draw(std::variant<Point, Line, Circle, Bezier, Spline> shape,
             RGB rgb = {255, 255, 255}, u_int16_t precision = 100) {
     if (std::holds_alternative<Point>(shape))
@@ -30,7 +41,21 @@ public:
       this->drawSpline(std::get<Spline>(shape), rgb, precision);
   }
 
-  void show() { vulcad::show(this->vertices, this->indices); };
+  void show() {
+    glm::mat4 model(1.f);
+    // normalize coodinates
+    auto scale = 2.f / std::max({this->coordinatesRange.x.getDistance(),
+                                 this->coordinatesRange.y.getDistance(),
+                                 this->coordinatesRange.z.getDistance()});
+    model = glm::scale(model, {scale, scale, scale});
+    // ordinal x-y plane (horizontal x-axis and vertical y-axis)
+    model = glm::rotate(model, glm::radians(90.0f), {0, 0, 1});
+    // ordinal x-y plane (origin is at the left bottom)
+    model[3].x = 1;
+    model[3].y = -1;
+    model[3].z = -1;
+    vulcad::show(this->vertices, this->indices, this->screenSize, model);
+  };
 
 private:
   std::vector<vulcad::Vertex> vertices;
@@ -91,13 +116,14 @@ private:
   }
 
   void drawPoint(Point &p, RGB rgb = DEFAULT_COLOR) {
-    this->drawCircle(Circle(p, .01), rgb);
+    this->drawCircle(Circle(p, 1), rgb);
   }
 
   void drawSpline(Spline &spline, RGB rgb = DEFAULT_COLOR,
                   u_int16_t precision = 100) {
     for (auto &curve : spline.curves) {
-      auto [xOrigin, xEnd] = curve.domain;
+      auto xOrigin = curve.origin.x;
+      auto xEnd = curve.end.x;
       float t = 0;
       float dt = 1.f / (float)precision;
       while (t < 1) {
@@ -115,4 +141,4 @@ private:
   }
 };
 
-#endif // VULCAD_DRAW_DRAWER
+#endif // VULCAD_DRAW_DRAWING
