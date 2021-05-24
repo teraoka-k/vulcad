@@ -7,21 +7,51 @@
 #include <tuple>
 #include <vector>
 
-/** cubic curve described as a*x^2 + b*x^1 + c*x^0 */
-struct cubicCurve {
-  /** domain of x (e.g. `{1, 2}` for [1, 2], 1<=x<=2)*/
-  std::tuple<float, float> domain;
-  /** coefficient of x^3*/
-  float x3;
-  /** coefficient of x^2*/
-  float x2;
-  /** coefficient of x^1*/
-  float x1;
-  /** coefficient of x^0*/
-  float x0;
+/**
+ * https://en.wikipedia.org/wiki/Spline_interpolation
+ * cubic curve in symmetrical form
+ * f(x) = (1-t(x))y1 + t(x)y2 + t(x)(1-t(x)){(1-t(x))a+t(x)b}
+ * where
+ *  t(x) = (x-x1)/(x2-x1)
+ *  a = f'(x1)(x2-x1) - (y2-y1)
+ *  b = -f'(x2)(x2-x1) + (y2-y1)
+ */
+class CubicCurve {
+public:
+  /** (x1, y1) */
+  Point origin;
+  /** (x2, y2) */
+  Point end;
+  /** f'(x1) */
+  float dfdx_origin;
+  /** f'(x2) */
+  float dfdx_end;
 
+  /** f(x) = (1-t(x))y1 + t(x)y2 + t(x)(1-t(x)){(1-t(x))a+t(x)b}*/
   Point getPointAt(float x) {
-    return {x, x3 * x * x * x + x2 * x * x + x1 * x + x0};
+    auto tx = this->t(x);
+    auto a = this->a();
+    auto b = this->b();
+    auto y1 = this->origin.y;
+    auto y2 = this->end.y;
+    return {x,
+            (1 - tx) * y1 + tx * y2 + tx * (1 - tx) * ((1 - tx) * a + tx * b)};
+  }
+
+private:
+  /** a = f'(x1)(x2-x1) - (y2-y1) */
+  float a() {
+    auto distance = this->end - this->origin;
+    return this->dfdx_origin * distance.x - distance.y;
+  }
+  /** b = -f'(x2)(x2-x1) + (y2-y1) */
+  float b() {
+    auto distance = this->end - this->origin;
+    return -this->dfdx_end * distance.x + distance.y;
+  }
+  /** t(x) = (x-x1)/(x2-x1) */
+  float t(float x) {
+    return (x - this->origin.x) / (this->end.x - this->origin.x);
   }
 };
 
@@ -30,7 +60,7 @@ class Spline {
 
 public:
   /** spline is set of cubic curves that are connected smoothly*/
-  std::vector<cubicCurve> curves;
+  std::vector<CubicCurve> curves;
   std::vector<Point> points;
 
   Spline(std::vector<Point> points) {
@@ -40,112 +70,49 @@ public:
     this->calculateCoefficients(points);
   }
 
-  void draw() {}
-
 private:
-  /** basically 4 constraints for each curve, 4n constraints in total
-      1. curve passes through the kth point
-      2. curve passes through the k+1th point
-      3. [[except the last curve]] derivative of the curve is equal to that of
-     the next curve at the k+1th point
-      4. [[except the last curve]] derivative of derivative of curve is equal
-     to that of the next curve at the k+1th point
-      5. [[only at the first or last curve]] derivative of derivative of curve
-     is 0 at the first or last point */
+  /** algorithm https://en.wikipedia.org/wiki/Spline_interpolation */
   void calculateCoefficients(std::vector<Point> points) {
-    auto countCurves = this->curves.size();
-    /** 4 coefficients (a, b, c, d) for each curve (ax^3 + bx^2 + cx + d) */
-    auto countCoefficients = 4 * countCurves;
-    /** solve coefficients of all the curves by linear equasion
-     *  Ax = y
-     *   A is 4n x 4n constraint matrix (n = len(curves))
-     *   x is 4n coefficients vector (4 coefficients per curve) (n =
-     * len(curves))
-     *   y is right hand side vector
-     */
-    auto A = Mat(countCoefficients, countCoefficients);
-    auto y = Mat(countCoefficients, 1);
-    /** row index of constraint matrix A */
-    int constraintIndex = 1;
+    auto countPoints = this->points.size();
+    auto A = Mat(countPoints, countPoints);
+    auto y = Mat(countPoints, 1);
 
-    /**
-     * if a curve passes through a point, then ax^3 + bx^2 + cx + d = y
-     */
-    auto curvePassThroughPoint =
-        [&constraintIndex, &A, &y](Point &point, int coefficientIndex) -> void {
-      A._(constraintIndex, coefficientIndex) = point.x * point.x * point.x;
-      A._(constraintIndex, coefficientIndex + 1) = point.x * point.x;
-      A._(constraintIndex, coefficientIndex + 2) = point.x;
-      A._(constraintIndex, coefficientIndex + 3) = 1;
-      y._(constraintIndex, 1) = point.y;
-      constraintIndex++;
-    };
+    // at the origin and end, curvature is zero
+    auto d1 = this->points[1] - this->points[0];
+    A._(1, 1) = 2.f / d1.x;
+    A._(1, 2) = 1.f / d1.x;
+    y._(1, 1) = 3 * d1.y / (d1.x * d1.x);
+    auto dn = this->points[countPoints - 1] - this->points[countPoints - 2];
+    A._(countPoints, countPoints - 1) = 1.f / dn.x;
+    A._(countPoints, countPoints) = 2.f / dn.x;
+    y._(countPoints, 1) = 3 * dn.y / (dn.x * dn.x);
 
-    /**
-     * at the edge points, derivative of derivative 6ax + 2b = 0
-     */
-    auto curvatureIsZero = [&constraintIndex, &A,
-                            &y](Point &point, int coefficientIndex) -> void {
-      A._(constraintIndex, coefficientIndex) = 6 * point.x;
-      A._(constraintIndex, coefficientIndex + 1) = 2;
-      y._(constraintIndex, 1) = 0;
-      constraintIndex++;
-    };
+    for (int k = 1; k < countPoints - 1; k++) {
+      auto pPre = points[k - 1];
+      auto p = points[k];
+      auto pNext = points[k + 1];
 
-    for (int k = 0; k < countCurves; k++) {
-      auto &curve = this->curves[k];
-      auto pk = points[k];
-      auto pk1 = points[k + 1];
-      /** column index of coefficient a for a*x^3 in matrix A*/
-      auto coefficientAkIndex = 4 * k + 1;
-      auto coefficientAk1Index = 4 * (k + 1) + 1;
-      // 1. curve passes through the kth point
-      curvePassThroughPoint(pk, coefficientAkIndex);
-      // 2. curve passes through the k+1th point
-      curvePassThroughPoint(pk1, coefficientAkIndex);
+      auto d1 = p - pPre;
+      auto d2 = pNext - p;
 
-      [[likely]] if (k != countCurves - 1) {
-        /* 3. derivative is equal to that of the next curve
-            thus (3ak*x^2 + 2bk*x + ck) - (3ak1*x^2 + 2bk*1x + ck1) = 0 */
-        A._(constraintIndex, coefficientAkIndex) = 3 * pk1.x * pk1.x;
-        A._(constraintIndex, coefficientAkIndex + 1) = 2 * pk1.x;
-        A._(constraintIndex, coefficientAkIndex + 2) = 1;
-        A._(constraintIndex, coefficientAk1Index) = -3 * pk1.x * pk1.x;
-        A._(constraintIndex, coefficientAk1Index + 1) = -2 * pk1.x;
-        A._(constraintIndex, coefficientAk1Index + 2) = -1;
-        y._(constraintIndex, 1) = 0;
-        constraintIndex++;
-
-        /* 4. derivative of derivative is equal to that of the next curve
-            thus (6ak*x + 2bk) - (6ak1x + 2bk1) = 0 */
-        A._(constraintIndex, coefficientAkIndex) = 6 * pk1.x;
-        A._(constraintIndex, coefficientAkIndex + 1) = 2;
-        A._(constraintIndex, coefficientAk1Index) = -6 * pk1.x;
-        A._(constraintIndex, coefficientAk1Index + 1) = -2;
-        y._(constraintIndex, 1) = 0;
-        constraintIndex++;
-      }
-
-      // 5. derivative of derivative is 0 at the first or last point
-      [[unlikely]] if (k == 0) curvatureIsZero(pk, coefficientAkIndex);
-      [[unlikely]] if (k == countCurves - 1)
-          curvatureIsZero(pk1, coefficientAkIndex);
+      A._(k + 1, k) = 1.f / d1.x;
+      A._(k + 1, k + 1) = 2 * (1.f / d1.x + 1.f / d2.x);
+      A._(k + 1, k + 2) = 1.f / d2.x;
+      y._(k + 1, 1) = 3 * (d1.y / (d1.x * d1.x) + d2.y / (d2.x * d2.x));
     }
 
     // solve linear equasion
-    auto coefficients = A.inverse() * y;
+    auto derivatives = A.inverse() * y;
 
-    // set coefficients
-    for (int k = 0; k < countCurves; k++) {
+    // define cubic curves
+    for (int k = 0; k < this->curves.size(); k++) {
       auto &curve = this->curves[k];
       auto pk = points[k];
       auto pk1 = points[k + 1];
-      curve.domain = std::make_tuple(pk.x, pk1.x);
-      auto coefficientAIndex = 4 * k + 1;
-      curve.x3 = coefficients._(coefficientAIndex, 1);
-      curve.x2 = coefficients._(coefficientAIndex + 1, 1);
-      curve.x1 = coefficients._(coefficientAIndex + 2, 1);
-      curve.x0 = coefficients._(coefficientAIndex + 3, 1);
+      curve.origin = pk;
+      curve.end = pk1;
+      curve.dfdx_origin = derivatives._(k + 1, 1);
+      curve.dfdx_end = derivatives._(k + 2, 1);
     }
   }
 };
