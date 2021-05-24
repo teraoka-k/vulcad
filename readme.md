@@ -100,7 +100,7 @@ Dxf::write("your-drawing", spline);
 in order of priority
 
 - [x] render vertices
-- [] change units in centimeter
+- [x] change units in centimeter
 - [x] draw lines
 - [x] draw circles
 - [x] export as dxf ([samples](dxf))
