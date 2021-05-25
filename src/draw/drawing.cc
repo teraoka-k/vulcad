@@ -3,23 +3,16 @@
 
 #include "../types.cc"
 #include "../vulcad.h"
-#include "shapes/bezier.cc"
-#include "shapes/circle.cc"
-#include "shapes/line.cc"
-#include "shapes/point.cc"
-#include "shapes/spline.cc"
+#include "dxf/dxf.cc"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <math.h>
-#include <variant>
 #include <vector>
 
 class Drawing {
-  typedef Point RGB;
-  inline static const RGB DEFAULT_COLOR = {255, 255, 255};
-
   CoordinatesRange coordinatesRange;
+  inline static const RGB DEFAULT_COLOR = {255, 255, 255};
   ScreenSize screenSize;
+  std::vector<Shape> shapes;
 
 public:
   Drawing(CoordinatesRange coordinatesRange, ScreenSize screenSize) {
@@ -27,8 +20,8 @@ public:
     this->screenSize = screenSize;
   }
 
-  void draw(std::variant<Point, Line, Circle, Bezier, Spline> shape,
-            RGB rgb = {255, 255, 255}, u_int16_t precision = 100) {
+  void draw(Shape shape, RGB rgb = {255, 255, 255}, u_int16_t precision = 100) {
+    this->shapes.push_back(shape);
     if (std::holds_alternative<Point>(shape))
       this->drawPoint(std::get<Point>(shape), rgb);
     else if (std::holds_alternative<Line>(shape))
@@ -41,6 +34,10 @@ public:
       this->drawSpline(std::get<Spline>(shape), rgb, precision);
   }
 
+  /** save the drawing as a dxf file */
+  void save(std::string fileName) { Dxf::write(fileName, this->shapes); }
+
+  /** render the screen */
   void show() {
     glm::mat4 model(1.f);
     // normalize coodinates
@@ -110,9 +107,9 @@ private:
     this->indices.push_back(this->vertices.size());
     auto origin = line.origin;
     auto end = line.end;
-    this->vertices.push_back({{origin.x, origin.y, 0}, {rgb.x, rgb.y, rgb.z}});
+    this->vertices.push_back({{origin.x, origin.y, 0}, {rgb.r, rgb.g, rgb.b}});
     this->indices.push_back(this->vertices.size());
-    this->vertices.push_back({{end.x, end.y, 0}, {rgb.x, rgb.y, rgb.z}});
+    this->vertices.push_back({{end.x, end.y, 0}, {rgb.r, rgb.g, rgb.b}});
   }
 
   void drawPoint(Point &p, RGB rgb = DEFAULT_COLOR) {

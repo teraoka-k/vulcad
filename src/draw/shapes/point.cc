@@ -2,6 +2,7 @@
 #define VULCAD_DRAW_POINT
 
 #include "../../math/matrix.cc"
+#include <math.h>
 #include <vector>
 
 class Point {
