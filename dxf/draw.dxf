@@ -9,7 +9,7 @@ AC1032
   9
 $HANDSEED
   5
-2A3
+2B0
   0
 ENDSEC
   0
@@ -723,7 +723,7 @@ AcDbLine
   0
 LINE
   5
-2A0
+2A1
 330
 1F
 100
@@ -743,7 +743,7 @@ AcDbLine
   0
 CIRCLE
   5
-2A0
+2A2
 330
 1F
 100
@@ -761,7 +761,7 @@ AcDbCircle
   0
 CIRCLE
   5
-2A0
+2A3
 330
 1F
 100
@@ -779,7 +779,7 @@ AcDbCircle
   0
 CIRCLE
   5
-2A0
+2A4
 330
 1F
 100
@@ -797,7 +797,7 @@ AcDbCircle
   0
 CIRCLE
   5
-2A0
+2A5
 330
 1F
 100
@@ -813,9 +813,121 @@ AcDbCircle
  40
 9.52843
   0
+POINT
+  5
+2A7
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+0
+ 20
+0
+  0
+POINT
+  5
+2A8
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+12
+ 20
+23
+  0
+POINT
+  5
+2A9
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+33
+ 20
+34
+  0
+POINT
+  5
+2AA
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+45
+ 20
+28
+  0
+POINT
+  5
+2AB
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+62
+ 20
+23
+  0
+POINT
+  5
+2AC
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+77
+ 20
+31
+  0
+POINT
+  5
+2AD
+330
+1F
+100
+AcDbEntity
+  8
+0
+100
+AcDbPoint
+ 10
+89
+ 20
+23
+  0
 SPLINE
   5
-2A0
+2AE
 330
 1F
 100

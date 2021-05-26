@@ -35,15 +35,15 @@ int main() {
     Point p1 = {12, 23}, p2 = {33, 34}, p3 = {45, 28}, p4 = {62, 23},
           p5 = {77, 31}, p6 = {89, 23};
     auto points = {O, p1, p2, p3, p4, p5, p6};
-    // for (auto &p : points)
-    // drawing.draw(p, {0, 10, 50});
+    for (auto &p : points)
+      drawing.draw(p, {0, 10, 50});
 
     Spline spline(points);
     drawing.draw(spline, {16, 64, 255}, 100);
 
     drawing.show();
 
-    drawing.save("drawing");
+    drawing.save("draw");
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;

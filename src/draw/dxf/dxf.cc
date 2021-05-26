@@ -25,7 +25,7 @@ public:
    */
   static void write(std::string fileName, std::vector<Shape> shapes) {
     std::ofstream file(OUT_DIR + fileName + ".dxf");
-    Header::write(file);
+    Header::write(file, shapes.size());
     Entity::write(file, shapes);
     Object::write(file);
     file << "  0" << std::endl << "EOF" << std::endl;

@@ -2,17 +2,18 @@
 #define VULCAD_DRAW_DXF_SECTION_HEADER
 
 #include "section.cc"
+#include "../util/hex.cc"
 
 class Header : public Section {
 public:
-  static void write(std::ofstream &file) {
+  static void write(std::ofstream &file, uint16_t countShape) {
     begin(file, "HEADER");
-    add(file);
+    add(file, countShape);
     end(file);
   }
 
 private:
-  static void add(std::ofstream &file) {
+  static void add(std::ofstream &file, uint16_t countShape) {
     file << "  9" << std::endl
          << "$ACADVER" << std::endl
          << "  1" << std::endl
@@ -20,7 +21,7 @@ private:
          << "  9" << std::endl
          << "$HANDSEED" << std::endl
          << "  5" << std::endl
-         << "2A3" << std::endl
+         << Hex::from(countShape + 16*16*2+16*10+1) << std::endl
          << "  0" << std::endl
          << "ENDSEC" << std::endl
          << "  0" << std::endl

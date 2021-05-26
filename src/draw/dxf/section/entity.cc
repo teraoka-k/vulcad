@@ -2,6 +2,7 @@
 #define VULCAD_DRAW_DXF_SECTION_ENTITY
 
 #include "../../../types.cc"
+#include "../util/hex.cc"
 #include "section.cc"
 
 constexpr int LAYER = 0;
@@ -10,29 +11,30 @@ class Entity : public Section {
 public:
   static void write(std::ofstream &file, std::vector<Shape> shapes) {
     begin(file, "ENTITIES");
-    for (auto &shape : shapes) {
+    for (int i = 0; i < shapes.size(); i++) {
+      auto &shape = shapes[i];
       if (std::holds_alternative<Point>(shape))
-        Entity::addPoint(file, std::get<Point>(shape));
+        Entity::addPoint(file, std::get<Point>(shape), i);
       else if (std::holds_alternative<Line>(shape))
-        Entity::addLine(file, std::get<Line>(shape));
+        Entity::addLine(file, std::get<Line>(shape), i);
       else if (std::holds_alternative<Circle>(shape))
-        Entity::addCircle(file, std::get<Circle>(shape));
+        Entity::addCircle(file, std::get<Circle>(shape), i);
       else if (std::holds_alternative<Bezier>(shape))
-        Entity::addBezier(file, std::get<Bezier>(shape));
+        Entity::addBezier(file, std::get<Bezier>(shape), i);
       else if (std::holds_alternative<Spline>(shape))
-        Entity::addSpline(file, std::get<Spline>(shape));
+        Entity::addSpline(file, std::get<Spline>(shape), i);
     }
     end(file);
   }
 
 private:
-  static void addBezier(std::ofstream &file, Bezier &bezier) {
+  static void addBezier(std::ofstream &file, Bezier &bezier, int index) {
     // not supported
   }
 
-  static void addCircle(std::ofstream &file, Circle &circle) {
+  static void addCircle(std::ofstream &file, Circle &circle, int index) {
     file << "  0" << std::endl << "CIRCLE" << std::endl;
-    addCommonCodes(file);
+    addCommonCodes(file, index);
     file << "100" << std::endl
          << "AcDbCircle" << std::endl
          << " 10" << std::endl
@@ -44,9 +46,9 @@ private:
     ;
   }
 
-  static void addLine(std::ofstream &file, Line &line) {
+  static void addLine(std::ofstream &file, Line &line, int index) {
     file << "  0" << std::endl << "LINE" << std::endl;
-    addCommonCodes(file);
+    addCommonCodes(file, index);
     file << "100" << std::endl
          << "AcDbLine" << std::endl
          << " 10" << std::endl
@@ -60,9 +62,9 @@ private:
     ;
   }
 
-  static void addPoint(std::ofstream &file, Point &point) {
+  static void addPoint(std::ofstream &file, Point &point, int index) {
     file << "  0" << std::endl << "POINT" << std::endl;
-    addCommonCodes(file);
+    addCommonCodes(file, index);
     file << "100" << std::endl
          << "AcDbPoint" << std::endl
          << " 10" << std::endl
@@ -72,9 +74,9 @@ private:
     ;
   }
 
-  static void addSpline(std::ofstream &file, Spline &spline) {
+  static void addSpline(std::ofstream &file, Spline &spline, int index) {
     file << "  0" << std::endl << "SPLINE" << std::endl;
-    addCommonCodes(file);
+    addCommonCodes(file, index);
     file << "100" << std::endl
          << "AcDbSpline" << std::endl
          << "210" << std::endl
@@ -98,9 +100,11 @@ private:
     }
   }
 
-  static void addCommonCodes(std::ofstream &file) {
+  static void addCommonCodes(std::ofstream &file, int index) {
+    // starts from 2A0
+    index += 16 * 16 * 2 + 16 * 10;
     file << "  5" << std::endl
-         << "2A0" << std::endl
+         << Hex::from(index) << std::endl
          << "330" << std::endl
          << "1F" << std::endl
          << "100" << std::endl
