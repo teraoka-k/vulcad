@@ -15,6 +15,10 @@ class Drawing {
   std::vector<Shape> shapes;
 
 public:
+  /**
+   * @param coordinateRange range of x and y coodinates
+   * @param screenSize width and height of window
+   */
   Drawing(CoordinatesRange coordinatesRange, ScreenSize screenSize) {
     this->coordinatesRange = coordinatesRange;
     this->screenSize = screenSize;
@@ -61,32 +65,11 @@ private:
   void drawBezier(Bezier bezier, RGB rgb = DEFAULT_COLOR,
                   uint16_t precision = 100) {
     float dt = 1.f / (float)precision;
-    auto origin = bezier.origin;
-    auto control = bezier.control;
-    auto end = bezier.end;
-
-    if (bezier.isQuodratic()) {
-      auto p2 = origin;
-      for (float t = 0.f; t <= 1.f; t += dt) {
-        auto p0 = (1 - t) * origin + t * control[0];
-        auto p1 = (1 - t) * control[0] + t * end;
-        auto p2New = (1 - t) * p0 + t * p1;
-        this->drawLine(Line(p2, p2New), rgb);
-        p2 = p2New;
-      }
-    } else if (bezier.isCubic()) {
-      auto p5 = origin;
-      for (float t = 0.f; t <= 1.f; t += dt) {
-        auto p0 = (1 - t) * origin + t * control[0];
-        auto p1 = (1 - t) * control[0] + t * control[1];
-        auto p2 = (1 - t) * control[1] + t * end;
-        auto p3 = (1 - t) * p0 + t * p1;
-        auto p4 = (1 - t) * p1 + t * p2;
-        auto p5New = (1 - t) * p3 + t * p4;
-        this->drawLine(Line(p5, p5New), rgb);
-        p5 = p5New;
-      }
-    }
+    for (float t = 0.f; t <= 1.f; t += dt)
+      this->drawLine(Line(bezier.getPointAt(t), t + dt < 1
+                                                    ? bezier.getPointAt(t + dt)
+                                                    : bezier.end()),
+                     rgb);
   }
 
   void drawCircle(Circle c, RGB rgb = DEFAULT_COLOR, uint16_t precision = 100) {

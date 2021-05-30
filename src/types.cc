@@ -10,8 +10,8 @@
 #include <variant>
 
 struct Interval {
-  float min;
-  float max;
+  float min = -1;
+  float max = 1;
 
   float getDistance() { return max - min; }
 };
