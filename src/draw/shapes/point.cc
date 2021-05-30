@@ -22,6 +22,25 @@ public:
     z = _z;
   }
 
+  /**
+   * get point p3 between this point p1 and another p2
+   * such that (p1-p3) : (p3-p2) = t : 1-t
+   */
+  Point between(Point another, float t) {
+    return (1 - t) * Point(x, y, z) + t * another;
+  }
+
+  /**
+   * get middle point between this point and another
+   */
+  Point middle(Point another) { return this->between(another, 1.f / 2.f); }
+
+  /** regard point as vector and get length */
+  float norm() { return sqrt(x * x + y * y + z * z); }
+
+  /** regard point as vector and get normalized vector */
+  Point normalize() { return Point(x, y, z) / this->norm(); }
+
   Point operator+(Point v) { return Point(x + v.x, y + v.y, z + v.z); }
   Point operator-(Point v) { return Point(x - v.x, y - v.y, z - v.z); }
   Point operator*(float scalar) {
@@ -68,6 +87,39 @@ public:
     this->x += origin.x;
     this->y += origin.y;
     this->z += origin.z;
+  }
+
+  /** create a new point relative to this point */
+  Point to(float dx = 0, float dy = 0, float dz = 0) {
+    return {x + dx, y + dy, z + dz};
+  }
+  /** create a new point relative to this point towards another point*/
+  Point to(Point towards, float length) {
+    auto dVec =
+        Point(towards.x - x, towards.y - y, towards.z - z).normalize() * length;
+    return this->to(dVec.x, dVec.y, dVec.z);
+  }
+  /**
+   * create a new point relative to this point in angular coodinates
+   * @param theta angle in degree. x-axis is zero and counter clockwise is
+   * positive
+   * @param length
+   * @param axis theta is defined in xy plane by default, i.e. around z-axis
+   * */
+  Point toInAngular(float theta = 0, float length = 0,
+                    Point::Axis axis = Point::Axis::z) {
+
+    auto thetaRadian = (float)M_PI / 180.f * theta;
+    auto d1 = length * cos(thetaRadian);
+    auto d2 = length * sin(thetaRadian);
+    switch (axis) {
+    case Point::Axis::x:
+      return {x, y + d1, z + d2};
+    case Point::Axis::y:
+      return {x + d2, y, z + d1};
+    default:
+      return {x + d1, y + d2, z};
+    }
   }
 };
 
